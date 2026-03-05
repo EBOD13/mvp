@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVP Architecture — My Virtual Passion</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap');
+
+  :root {
+    --bg: #0B0E14;
+    --surface: #111620;
+    --surface-2: #161C28;
+    --surface-3: #1C2436;
+    --border: #232D42;
+    --border-active: #3B4F73;
+    --text: #CBD5E8;
+    --text-dim: #6B7A96;
+    --text-bright: #E8EDF5;
+    --accent-blue: #4E8AE6;
+    --accent-blue-dim: #2A5BB0;
+    --accent-purple: #8B6CC1;
+    --accent-green: #4CAF82;
+    --accent-amber: #D4A843;
+    --accent-rose: #D46B7A;
+    --accent-teal: #3ABAB4;
+    --accent-orange: #E08A4E;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Outfit', sans-serif;
+    --serif: 'Crimson Pro', serif;
+    --glow-blue: 0 0 20px rgba(78,138,230,0.15);
+    --glow-purple: 0 0 20px rgba(139,108,193,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    position: relative;
+    padding: 80px 40px 60px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(78,138,230,0.08) 0%, rgba(139,108,193,0.04) 40%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent-blue);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: 56px;
+    font-weight: 800;
+    color: var(--text-bright);
+    letter-spacing: -2px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--text-bright) 0%, var(--accent-blue) 50%, var(--accent-purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 680px;
+    margin: 0 auto 40px;
+    font-weight: 300;
+  }
+  .hero-meta {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .hero-meta span {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hero-meta .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-blue { background: var(--accent-blue); }
+  .dot-purple { background: var(--accent-purple); }
+  .dot-green { background: var(--accent-green); }
+
+  /* ===== TABS ===== */
+  .tab-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+  .tab {
+    padding: 14px 28px;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.2s;
+    position: relative;
+    bottom: -1px;
+    user-select: none;
+  }
+  .tab:hover { color: var(--text); background: var(--surface); }
+  .tab.active {
+    color: var(--accent-blue);
+    background: var(--surface);
+    border-color: var(--border);
+    border-bottom: 1px solid var(--surface);
+  }
+  .tab-panel {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 40px;
+    animation: fadeIn 0.3s ease;
+  }
+  .tab-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ===== SECTION HEADERS ===== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .section-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .section-icon.backend { background: linear-gradient(135deg, rgba(78,138,230,0.15), rgba(78,138,230,0.05)); border: 1px solid rgba(78,138,230,0.2); }
+  .section-icon.frontend { background: linear-gradient(135deg, rgba(139,108,193,0.15), rgba(139,108,193,0.05)); border: 1px solid rgba(139,108,193,0.2); }
+  .section-icon.rules { background: linear-gradient(135deg, rgba(76,175,130,0.15), rgba(76,175,130,0.05)); border: 1px solid rgba(76,175,130,0.2); }
+  .section-icon.flow { background: linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05)); border: 1px solid rgba(212,168,67,0.2); }
+  .section-title { font-size: 28px; font-weight: 700; color: var(--text-bright); letter-spacing: -0.5px; }
+  .section-subtitle { font-size: 14px; color: var(--text-dim); font-weight: 300; }
+
+  /* ===== TREE ===== */
+  .tree {
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.9;
+    padding: 28px 32px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow-x: auto;
+    position: relative;
+  }
+  .tree::before {
+    content: 'STRUCTURE';
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--border-active);
+  }
+  .tree-line { white-space: nowrap; }
+  .tree-guide { color: var(--border-active); }
+  .tree-folder { color: var(--accent-blue); font-weight: 600; }
+  .tree-folder.frontend-f { color: var(--accent-purple); }
+  .tree-file { color: var(--text-dim); }
+  .tree-file.primary { color: var(--accent-green); font-weight: 500; }
+  .tree-file.config { color: var(--accent-amber); }
+  .tree-comment { color: #3D4F6D; font-style: italic; font-weight: 300; }
+
+  /* ===== FOLDER CARDS ===== */
+  .folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 20px;
+    margin-top: 28px;
+  }
+  .folder-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .folder-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+  .folder-card.blue::before { background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal)); }
+  .folder-card.purple::before { background: linear-gradient(90deg, var(--accent-purple), var(--accent-rose)); }
+  .folder-card.green::before { background: linear-gradient(90deg, var(--accent-green), var(--accent-teal)); }
+  .folder-card.amber::before { background: linear-gradient(90deg, var(--accent-amber), var(--accent-orange)); }
+  .folder-card.rose::before { background: linear-gradient(90deg, var(--accent-rose), var(--accent-purple)); }
+  .folder-card.teal::before { background: linear-gradient(90deg, var(--accent-teal), var(--accent-blue)); }
+  .folder-card:hover { border-color: var(--border-active); transform: translateY(-2px); box-shadow: var(--glow-blue); }
+
+  .folder-name {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .folder-name .icon { font-size: 18px; }
+  .folder-name .path { color: var(--text-dim); font-weight: 400; font-size: 12px; }
+  .folder-desc {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+  .folder-files {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+  .folder-files-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--border-active);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .file-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 13px;
+  }
+  .file-name {
+    font-family: var(--mono);
+    color: var(--accent-green);
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .file-sep { color: var(--border-active); flex-shrink: 0; }
+  .file-desc { color: var(--text-dim); font-family: var(--sans); }
+
+  /* ===== RULES ===== */
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
+  }
+  .rule-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .rule-card h4 {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-green);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rule-card p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .rule-card code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--surface-2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent-amber);
+  }
+  .rule-example {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-green);
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text);
+    overflow-x: auto;
+  }
+  .rule-example .dim { color: var(--text-dim); }
+  .rule-example .hl { color: var(--accent-amber); }
+  .rule-example .hl2 { color: var(--accent-blue); }
+
+  /* ===== FLOW DIAGRAMS ===== */
+  .flow-section { margin-top: 32px; }
+  .flow-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    color: var(--accent-amber);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .flow-diagram {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    overflow-x: auto;
+    margin-bottom: 24px;
+  }
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .flow-box {
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid;
+    white-space: nowrap;
+    position: relative;
+  }
+  .flow-box.user { background: rgba(212,107,122,0.1); border-color: rgba(212,107,122,0.3); color: var(--accent-rose); }
+  .flow-box.screen { background: rgba(139,108,193,0.1); border-color: rgba(139,108,193,0.3); color: var(--accent-purple); }
+  .flow-box.hook { background: rgba(58,186,180,0.1); border-color: rgba(58,186,180,0.3); color: var(--accent-teal); }
+  .flow-box.api { background: rgba(224,138,78,0.1); border-color: rgba(224,138,78,0.3); color: var(--accent-orange); }
+  .flow-box.router { background: rgba(78,138,230,0.1); border-color: rgba(78,138,230,0.3); color: var(--accent-blue); }
+  .flow-box.service { background: rgba(76,175,130,0.1); border-color: rgba(76,175,130,0.3); color: var(--accent-green); }
+  .flow-box.db { background: rgba(212,168,67,0.1); border-color: rgba(212,168,67,0.3); color: var(--accent-amber); }
+  .flow-box.schema { background: rgba(139,108,193,0.08); border-color: rgba(139,108,193,0.25); color: var(--accent-purple); }
+  .flow-box.lib { background: rgba(107,142,107,0.1); border-color: rgba(107,142,107,0.3); color: #8BAF8B; }
+  .flow-arrow {
+    color: var(--border-active);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .flow-label {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-left: 8px;
+  }
+
+  /* ===== WIDE TABLE ===== */
+  .interaction-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 13px;
+  }
+  .interaction-table th {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  .interaction-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .interaction-table tr:hover td { background: rgba(78,138,230,0.03); }
+  .interaction-table .from { font-family: var(--mono); color: var(--accent-blue); font-weight: 500; white-space: nowrap; }
+  .interaction-table .to { font-family: var(--mono); color: var(--accent-purple); font-weight: 500; white-space: nowrap; }
+  .interaction-table .how { color: var(--text-dim); }
+
+  /* ===== NAMING TABLE ===== */
+  .naming-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 13px;
+  }
+  .naming-table th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--border);
+  }
+  .naming-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .naming-table .conv { color: var(--accent-green); }
+  .naming-table .ex { color: var(--accent-amber); }
+  .naming-table .layer { color: var(--text); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .hero h1 { font-size: 36px; }
+    .folder-grid, .rules-grid { grid-template-columns: 1fr; }
+    .tab-panel { padding: 24px; }
+    .tabs { overflow-x: auto; }
+    .flow-row { flex-direction: column; align-items: flex-start; }
+    .flow-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <div class="hero-badge">Architecture Reference v1.0</div>
+  <h1>MVP Architecture</h1>
+  <p>Full-stack folder structure, conventions, and data flow for My Virtual Passion — designed for security, scalability, and team collaboration.</p>
+  <div class="hero-meta">
+    <span><span class="dot dot-blue"></span> Backend — Python / FastAPI</span>
+    <span><span class="dot dot-purple"></span> Frontend — React Native / TypeScript</span>
+    <span><span class="dot dot-green"></span> Database — Supabase / PostgreSQL</span>
+  </div>
+</div>
+
+<!-- ===== TABS ===== -->
+<div class="tab-container">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)">📂 Structure</div>
+    <div class="tab" onclick="switchTab(1)">🔷 Backend</div>
+    <div class="tab" onclick="switchTab(2)">🔮 Frontend</div>
+    <div class="tab" onclick="switchTab(3)">📐 Conventions</div>
+    <div class="tab" onclick="switchTab(4)">🔄 Data Flow</div>
+  </div>
+
+  <!-- ==================== TAB 0: STRUCTURE ==================== -->
+  <div class="tab-panel active" id="panel-0">
+    <div class="section-header">
+      <div class="section-icon backend">📂</div>
+      <div>
+        <div class="section-title">Backend Directory Tree</div>
+        <div class="section-subtitle">Python · FastAPI · snake_case convention</div>
+      </div>
+    </div>
+
+    <div class="tree">
+<div class="tree-line"><span class="tree-folder">mvp-backend/</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-file config">main.py</span> <span class="tree-comment"># FastAPI app entry point, mounts routers</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-file config">requirements.txt</span> <span class="tree-comment"># Pinned dependencies</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-file config">.env</span> <span class="tree-comment"># Environment variables (never commit)</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-file config">.env.example</span> <span class="tree-comment"># Template for required env vars</span></div>
+<div class="tree-line"><span class="tree-guide">│</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-folder">lib/</span> <span class="tree-comment"># Core config &amp; infrastructure</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file primary">supabase_client.py</span> <span class="tree-comment"># Supabase client initialization</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file primary">auth.py</span> <span class="tree-comment"># JWT verification, get_current_user dependency</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">roles.py</span> <span class="tree-comment"># Role enums &amp; permission checks</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">permissions.py</span> <span class="tree-comment"># Granular permission decorators/guards</span></div>
+<div class="tree-line"><span class="tree-guide">│   └── </span><span class="tree-file">exceptions.py</span> <span class="tree-comment"># Custom HTTP exception classes</span></div>
+<div class="tree-line"><span class="tree-guide">│</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-folder">schemas/</span> <span class="tree-comment"># Pydantic models (request/response validation)</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file primary">user_schema.py</span> <span class="tree-comment"># UserCreate, UserResponse, UserUpdate</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">phriendship_schema.py</span> <span class="tree-comment"># PhriendRequest, PhriendResponse</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">passion_schema.py</span> <span class="tree-comment"># PassionCreate, PassionResponse, PassionUpdate</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">subchannel_schema.py</span> <span class="tree-comment"># SubchannelCreate, SubchannelResponse</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">post_schema.py</span> <span class="tree-comment"># PostCreate, PostResponse, PostUpdate</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">comment_schema.py</span> <span class="tree-comment"># CommentCreate, CommentResponse</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">event_schema.py</span> <span class="tree-comment"># EventCreate, EventResponse, EventUpdate</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">notification_schema.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">message_schema.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   └── </span><span class="tree-file">common_schema.py</span> <span class="tree-comment"># Shared: PaginationParams, StatusResponse</span></div>
+<div class="tree-line"><span class="tree-guide">│</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-folder">routers/</span> <span class="tree-comment"># API endpoints (thin — delegates to services)</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file primary">auth_router.py</span> <span class="tree-comment"># POST /auth/signup, /auth/login, /auth/refresh</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">user_router.py</span> <span class="tree-comment"># GET/PATCH /users/{id}, GET /users/me</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">phriendship_router.py</span> <span class="tree-comment"># POST /phriends/request, PATCH /phriends/{id}</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">passion_router.py</span> <span class="tree-comment"># CRUD /passions, /passions/{id}/members</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">subchannel_router.py</span> <span class="tree-comment"># CRUD /passions/{id}/subchannels</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">post_router.py</span> <span class="tree-comment"># CRUD /posts, /posts/{id}/like, /posts/{id}/save</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">comment_router.py</span> <span class="tree-comment"># CRUD /posts/{id}/comments</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">event_router.py</span> <span class="tree-comment"># CRUD /events, /events/{id}/rsvp, /events/board</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">notification_router.py</span> <span class="tree-comment"># GET /notifications, PATCH /notifications/read</span></div>
+<div class="tree-line"><span class="tree-guide">│   └── </span><span class="tree-file">message_router.py</span> <span class="tree-comment"># GET/POST /messages/{user_id}</span></div>
+<div class="tree-line"><span class="tree-guide">│</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-folder">services/</span> <span class="tree-comment"># Business logic &amp; CRUD operations</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file primary">auth_service.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">user_service.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">phriendship_service.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">passion_service.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">subchannel_service.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">post_service.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">comment_service.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">event_service.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   ├── </span><span class="tree-file">notification_service.py</span></div>
+<div class="tree-line"><span class="tree-guide">│   └── </span><span class="tree-file">message_service.py</span></div>
+<div class="tree-line"><span class="tree-guide">│</span></div>
+<div class="tree-line"><span class="tree-guide">└── </span><span class="tree-folder">migrations/</span> <span class="tree-comment"># Raw SQL — sequential &amp; versioned</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-file config">001_create_users.sql</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-file config">002_create_phriendships.sql</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-file config">003_create_passions.sql</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-file config">004_create_subchannels.sql</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-file config">005_create_posts.sql</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-file config">006_create_events.sql</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-file config">007_create_notifications.sql</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-file config">008_create_messages.sql</span></div>
+<div class="tree-line"><span class="tree-guide">    └── </span><span class="tree-file config">009_create_reports.sql</span></div>
+    </div>
+
+    <div style="height: 48px;"></div>
+
+    <div class="section-header">
+      <div class="section-icon frontend">📂</div>
+      <div>
+        <div class="section-title">Frontend Directory Tree</div>
+        <div class="section-subtitle">React Native · TypeScript · camelCase convention</div>
+      </div>
+    </div>
+
+    <div class="tree">
+<div class="tree-line"><span class="tree-folder frontend-f">mvp-frontend/</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-file config">app.json</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-file config">tsconfig.json</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-file config">package.json</span></div>
+<div class="tree-line"><span class="tree-guide">├── </span><span class="tree-file config">App.tsx</span> <span class="tree-comment"># Root: wraps AuthProvider + NavigationContainer</span></div>
+<div class="tree-line"><span class="tree-guide">│</span></div>
+<div class="tree-line"><span class="tree-guide">└── </span><span class="tree-folder frontend-f">src/</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-folder frontend-f">config/</span> <span class="tree-comment"># Environment &amp; build config</span></div>
+<div class="tree-line"><span class="tree-guide">    │   └── </span><span class="tree-file config">env.ts</span> <span class="tree-comment"># API_BASE_URL, SUPABASE_URL, SUPABASE_ANON_KEY</span></div>
+<div class="tree-line"><span class="tree-guide">    │</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-folder frontend-f">lib/</span> <span class="tree-comment"># Low-level clients &amp; utilities</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file primary">apiClient.ts</span> <span class="tree-comment"># Axios instance w/ interceptors, auth header injection</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file primary">supabase.ts</span> <span class="tree-comment"># createClient(SUPABASE_URL, ANON_KEY) config</span></div>
+<div class="tree-line"><span class="tree-guide">    │   └── </span><span class="tree-file primary">secureStorage.ts</span> <span class="tree-comment"># Keychain wrapper: getToken, setToken, clearToken</span></div>
+<div class="tree-line"><span class="tree-guide">    │</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-folder frontend-f">context/</span> <span class="tree-comment"># React Context providers</span></div>
+<div class="tree-line"><span class="tree-guide">    │   └── </span><span class="tree-file primary">AuthContext.tsx</span> <span class="tree-comment"># Auth state, login, logout, onAuthStateChange</span></div>
+<div class="tree-line"><span class="tree-guide">    │</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-folder frontend-f">types/</span> <span class="tree-comment"># TypeScript interfaces mirroring backend schemas</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">user.ts</span> <span class="tree-comment"># User, UserCreate, UserUpdate</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">passion.ts</span> <span class="tree-comment"># Passion, PassionCreate, SubChannel</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">post.ts</span> <span class="tree-comment"># Post, PostCreate, Comment</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">event.ts</span> <span class="tree-comment"># Event, EventCreate, RSVP</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">notification.ts</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">message.ts</span></div>
+<div class="tree-line"><span class="tree-guide">    │   └── </span><span class="tree-file">common.ts</span> <span class="tree-comment"># PaginatedResponse&lt;T&gt;, ApiError</span></div>
+<div class="tree-line"><span class="tree-guide">    │</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-folder frontend-f">api/</span> <span class="tree-comment"># API layer — typed functions wrapping apiClient</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">authApi.ts</span> <span class="tree-comment"># signup(), login(), refreshToken()</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">userApi.ts</span> <span class="tree-comment"># getMe(), updateProfile(), searchUsers()</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">phriendApi.ts</span> <span class="tree-comment"># sendRequest(), acceptRequest(), getPhriends()</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">passionApi.ts</span> <span class="tree-comment"># createPassion(), explorePassions(), joinPassion()</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">subchannelApi.ts</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">postApi.ts</span> <span class="tree-comment"># createPost(), getFeed(), likePost(), savePost()</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">commentApi.ts</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">eventApi.ts</span> <span class="tree-comment"># createEvent(), rsvp(), getEventsBoard()</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">notificationApi.ts</span></div>
+<div class="tree-line"><span class="tree-guide">    │   └── </span><span class="tree-file">messageApi.ts</span></div>
+<div class="tree-line"><span class="tree-guide">    │</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-folder frontend-f">hooks/</span> <span class="tree-comment"># Custom React hooks</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file primary">useAuth.ts</span> <span class="tree-comment"># Consumes AuthContext</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">useFeed.ts</span> <span class="tree-comment"># Infinite scroll + feed filtering</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">usePassions.ts</span> <span class="tree-comment"># Passion CRUD + membership</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">useEvents.ts</span> <span class="tree-comment"># Event listing, RSVP, reminders</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">useNotifications.ts</span></div>
+<div class="tree-line"><span class="tree-guide">    │   └── </span><span class="tree-file">useDebounce.ts</span> <span class="tree-comment"># Generic debounce for search inputs</span></div>
+<div class="tree-line"><span class="tree-guide">    │</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-folder frontend-f">theme/</span> <span class="tree-comment"># Design system</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file primary">colors.ts</span> <span class="tree-comment"># Light &amp; dark palettes</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">typography.ts</span> <span class="tree-comment"># Font families, sizes, weights</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file">spacing.ts</span> <span class="tree-comment"># Consistent spacing scale</span></div>
+<div class="tree-line"><span class="tree-guide">    │   └── </span><span class="tree-file">index.ts</span> <span class="tree-comment"># Unified theme export + useTheme hook</span></div>
+<div class="tree-line"><span class="tree-guide">    │</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-folder frontend-f">components/</span> <span class="tree-comment"># Reusable UI building blocks</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-folder frontend-f">common/</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">Button.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">Input.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">Avatar.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">LoadingSpinner.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   └── </span><span class="tree-file">EmptyState.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-folder frontend-f">cards/</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">PostCard.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">PassionCard.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">EventCard.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   └── </span><span class="tree-file">PhriendCard.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-folder frontend-f">forms/</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">CreatePostForm.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">CreatePassionForm.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   └── </span><span class="tree-file">CreateEventForm.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   └── </span><span class="tree-folder frontend-f">layout/</span></div>
+<div class="tree-line"><span class="tree-guide">    │       ├── </span><span class="tree-file">Header.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │       ├── </span><span class="tree-file">TabBar.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │       └── </span><span class="tree-file">SafeArea.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-folder frontend-f">screens/</span> <span class="tree-comment"># Full-page views (one per route)</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-folder frontend-f">auth/</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">LoginScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">SignupScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   └── </span><span class="tree-file">ForgotPasswordScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-folder frontend-f">feed/</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">HomeFeedScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   └── </span><span class="tree-file">PostDetailScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-folder frontend-f">passions/</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">ExplorePassionsScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">PassionDetailScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   └── </span><span class="tree-file">SubchannelScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-folder frontend-f">events/</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">EventsBoardScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   └── </span><span class="tree-file">EventDetailScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-folder frontend-f">social/</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">PhriendListScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   └── </span><span class="tree-file">MessagesScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-folder frontend-f">profile/</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   ├── </span><span class="tree-file">ProfileScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   │   └── </span><span class="tree-file">EditProfileScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │   └── </span><span class="tree-folder frontend-f">notifications/</span></div>
+<div class="tree-line"><span class="tree-guide">    │       └── </span><span class="tree-file">NotificationsScreen.tsx</span></div>
+<div class="tree-line"><span class="tree-guide">    │</span></div>
+<div class="tree-line"><span class="tree-guide">    ├── </span><span class="tree-folder frontend-f">navigation/</span> <span class="tree-comment"># React Navigation config</span></div>
+<div class="tree-line"><span class="tree-guide">    │   ├── </span><span class="tree-file primary">AppNavigator.tsx</span> <span class="tree-comment"># Stack + Tab navigators, auth gate</span></div>
+<div class="tree-line"><span class="tree-guide">    │   └── </span><span class="tree-file primary">types.ts</span> <span class="tree-comment"># RootStackParamList type definitions</span></div>
+<div class="tree-line"><span class="tree-guide">    │</span></div>
+<div class="tree-line"><span class="tree-guide">    └── </span><span class="tree-folder frontend-f">assets/</span> <span class="tree-comment"># Static resources</span></div>
+<div class="tree-line"><span class="tree-guide">        ├── </span><span class="tree-folder frontend-f">images/</span> <span class="tree-comment"># PNG/SVG icons, logos, placeholders</span></div>
+<div class="tree-line"><span class="tree-guide">        ├── </span><span class="tree-folder frontend-f">animations/</span> <span class="tree-comment"># Lottie JSON files</span></div>
+<div class="tree-line"><span class="tree-guide">        └── </span><span class="tree-folder frontend-f">fonts/</span> <span class="tree-comment"># Custom typefaces (.ttf/.otf)</span></div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 1: BACKEND ==================== -->
+  <div class="tab-panel" id="panel-1">
+    <div class="section-header">
+      <div class="section-icon backend">🔷</div>
+      <div>
+        <div class="section-title">Backend Folder Reference</div>
+        <div class="section-subtitle">Purpose, responsibilities, and key files for each backend directory</div>
+      </div>
+    </div>
+
+    <div class="folder-grid">
+      <div class="folder-card blue">
+        <div class="folder-name"><span class="icon">⚙️</span> lib/ <span class="path">mvp-backend/lib/</span></div>
+        <div class="folder-desc">The infrastructure layer. Contains all configuration, authentication logic, role definitions, and shared utilities. Every other layer depends on <code>lib/</code> — it depends on nothing else in the codebase.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Key files</div>
+          <div class="file-entry"><span class="file-name">supabase_client.py</span> <span class="file-sep">—</span> <span class="file-desc">Initializes the Supabase Python client using env vars. Exports a singleton <code>supabase</code> instance used by all services.</span></div>
+          <div class="file-entry"><span class="file-name">auth.py</span> <span class="file-sep">—</span> <span class="file-desc">Defines <code>get_current_user</code> as a FastAPI Dependency that decodes JWT from the Authorization header via Supabase. All protected routes inject this.</span></div>
+          <div class="file-entry"><span class="file-name">roles.py</span> <span class="file-sep">—</span> <span class="file-desc">Enums for <code>PassionRole</code>, <code>SubchannelRole</code>, and <code>EventOrganizerPermission</code>. Centralizes role hierarchy logic.</span></div>
+          <div class="file-entry"><span class="file-name">permissions.py</span> <span class="file-sep">—</span> <span class="file-desc">FastAPI dependency factories like <code>require_passion_role("admin")</code> that check membership + role before allowing access.</span></div>
+          <div class="file-entry"><span class="file-name">exceptions.py</span> <span class="file-sep">—</span> <span class="file-desc">Custom exceptions: <code>NotFoundError</code>, <code>ForbiddenError</code>, <code>DuplicateError</code>. Mapped to HTTP status codes via exception handlers in <code>main.py</code>.</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card green">
+        <div class="folder-name"><span class="icon">📐</span> schemas/ <span class="path">mvp-backend/schemas/</span></div>
+        <div class="folder-desc">Pydantic models that validate every byte entering and leaving the API. Each domain entity gets a schema file with <code>Create</code>, <code>Update</code>, and <code>Response</code> variants. Schemas never import from routers or services — they are pure data contracts.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Pattern per file</div>
+          <div class="file-entry"><span class="file-name">*_schema.py</span> <span class="file-sep">—</span> <span class="file-desc">Contains <code>EntityCreate</code> (input), <code>EntityUpdate</code> (partial input), <code>EntityResponse</code> (output with computed fields), and any nested sub-models.</span></div>
+          <div class="file-entry"><span class="file-name">common_schema.py</span> <span class="file-sep">—</span> <span class="file-desc">Shared models: <code>PaginationParams(offset, limit)</code>, <code>PaginatedResponse[T]</code>, <code>StatusResponse(success, message)</code>.</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card purple">
+        <div class="folder-name"><span class="icon">🛤️</span> routers/ <span class="path">mvp-backend/routers/</span></div>
+        <div class="folder-desc">Thin HTTP layer. Each router file defines endpoints for one domain, injects auth dependencies, validates input via schemas, and delegates all logic to the corresponding service. Routers never touch the database directly.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Anatomy of a router</div>
+          <div class="file-entry"><span class="file-name">*_router.py</span> <span class="file-sep">—</span> <span class="file-desc">Creates an <code>APIRouter(prefix="/entity", tags=["Entity"])</code>. Each endpoint is a decorated async function that calls <code>entity_service.method()</code> and returns a schema response.</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card teal">
+        <div class="folder-name"><span class="icon">🧠</span> services/ <span class="path">mvp-backend/services/</span></div>
+        <div class="folder-desc">The brain. Contains all business logic, database queries (via Supabase client), data transformations, permission enforcement, and side effects (e.g., creating a notification when someone likes a post). Services import from <code>lib/</code> and <code>schemas/</code> only.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Responsibilities</div>
+          <div class="file-entry"><span class="file-name">*_service.py</span> <span class="file-sep">—</span> <span class="file-desc">Exports async functions: <code>create_*()</code>, <code>get_*()</code>, <code>update_*()</code>, <code>delete_*()</code>. Each function receives typed params, queries Supabase, applies business rules, and returns data or raises exceptions.</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card amber">
+        <div class="folder-name"><span class="icon">🗄️</span> migrations/ <span class="path">mvp-backend/migrations/</span></div>
+        <div class="folder-desc">Versioned, sequential SQL files that define and evolve the database schema. Prefixed with a 3-digit number for ordering. Run against Supabase via the SQL editor or a migration runner script. Never modify an existing migration — create a new one.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Naming pattern</div>
+          <div class="file-entry"><span class="file-name">NNN_description.sql</span> <span class="file-sep">—</span> <span class="file-desc">e.g., <code>001_create_users.sql</code>, <code>010_add_passion_tags.sql</code>. Each file is idempotent (uses <code>IF NOT EXISTS</code>) and includes both the table creation and its indexes/constraints.</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card rose">
+        <div class="folder-name"><span class="icon">🚀</span> main.py <span class="path">mvp-backend/main.py</span></div>
+        <div class="folder-desc">The application entry point. Creates the FastAPI instance, registers all routers with <code>app.include_router()</code>, configures CORS middleware, and registers the custom exception handlers from <code>lib/exceptions.py</code>. This is the only file that imports from <code>routers/</code>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 2: FRONTEND ==================== -->
+  <div class="tab-panel" id="panel-2">
+    <div class="section-header">
+      <div class="section-icon frontend">🔮</div>
+      <div>
+        <div class="section-title">Frontend Folder Reference</div>
+        <div class="section-subtitle">Purpose, responsibilities, and key files for each frontend directory</div>
+      </div>
+    </div>
+
+    <div class="folder-grid">
+      <div class="folder-card amber">
+        <div class="folder-name"><span class="icon">🔧</span> config/ <span class="path">src/config/</span></div>
+        <div class="folder-desc">Environment configuration. A single file that reads environment variables and exports typed constants. Nothing else in the app reads <code>process.env</code> directly — everything goes through <code>config/env.ts</code>.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Files</div>
+          <div class="file-entry"><span class="file-name">env.ts</span> <span class="file-sep">—</span> <span class="file-desc">Exports <code>API_BASE_URL</code>, <code>SUPABASE_URL</code>, <code>SUPABASE_ANON_KEY</code>. Uses fallbacks for dev vs production.</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card blue">
+        <div class="folder-name"><span class="icon">🔌</span> lib/ <span class="path">src/lib/</span></div>
+        <div class="folder-desc">Low-level infrastructure clients. These are the plumbing — consumed by <code>api/</code>, <code>context/</code>, and <code>hooks/</code>, but never by screens or components directly.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Files</div>
+          <div class="file-entry"><span class="file-name">apiClient.ts</span> <span class="file-sep">—</span> <span class="file-desc">Axios instance with base URL from config, request interceptor that attaches the JWT from secure storage, and response interceptor for 401 → auto-refresh logic.</span></div>
+          <div class="file-entry"><span class="file-name">supabase.ts</span> <span class="file-sep">—</span> <span class="file-desc">Initializes <code>createClient()</code> with custom storage adapter that delegates to <code>secureStorage.ts</code> instead of AsyncStorage for token persistence.</span></div>
+          <div class="file-entry"><span class="file-name">secureStorage.ts</span> <span class="file-sep">—</span> <span class="file-desc">Wraps <code>react-native-keychain</code> with a <code>SERVICE = 'supabase-auth'</code> namespace. Exports <code>getToken()</code>, <code>setToken()</code>, <code>clearToken()</code>.</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card rose">
+        <div class="folder-name"><span class="icon">🔐</span> context/ <span class="path">src/context/</span></div>
+        <div class="folder-desc">React Context providers that hold global state. Currently only <code>AuthContext</code>, but can grow to include <code>ThemeContext</code> or <code>NotificationContext</code> as needed.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Files</div>
+          <div class="file-entry"><span class="file-name">AuthContext.tsx</span> <span class="file-sep">—</span> <span class="file-desc">Provides <code>user</code>, <code>session</code>, <code>isLoading</code>, <code>login()</code>, <code>logout()</code>, <code>signup()</code>. Listens to Supabase <code>onAuthStateChange</code> and persists tokens via secureStorage.</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card green">
+        <div class="folder-name"><span class="icon">📝</span> types/ <span class="path">src/types/</span></div>
+        <div class="folder-desc">TypeScript interfaces that mirror the backend Pydantic schemas. These are the single source of truth for data shapes on the frontend. Every API function and component prop should reference these types.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Pattern</div>
+          <div class="file-entry"><span class="file-name">entity.ts</span> <span class="file-sep">—</span> <span class="file-desc">Exports <code>Entity</code> (full response type), <code>EntityCreate</code> (input), <code>EntityUpdate</code> (partial). Field names match the backend JSON keys exactly (camelCase from FastAPI's <code>alias_generator</code>).</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card purple">
+        <div class="folder-name"><span class="icon">📡</span> api/ <span class="path">src/api/</span></div>
+        <div class="folder-desc">Typed async functions that call the backend via <code>apiClient</code>. One file per domain. These are the only files that import <code>apiClient</code> — hooks and screens never make HTTP calls directly.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Pattern</div>
+          <div class="file-entry"><span class="file-name">entityApi.ts</span> <span class="file-sep">—</span> <span class="file-desc">Exports named functions like <code>getEntity(id: string): Promise&lt;Entity&gt;</code>. Each function calls <code>apiClient.get/post/patch/delete</code> and returns typed data.</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card teal">
+        <div class="folder-name"><span class="icon">🪝</span> hooks/ <span class="path">src/hooks/</span></div>
+        <div class="folder-desc">Custom React hooks that encapsulate state management, API calls, caching, and side effects. Screens consume hooks — they never call API functions directly. This gives you a clean layer to add caching, optimistic updates, or offline support later.</div>
+        <div class="folder-files">
+          <div class="folder-files-title">Examples</div>
+          <div class="file-entry"><span class="file-name">useAuth.ts</span> <span class="file-sep">—</span> <span class="file-desc">Convenience wrapper around <code>useContext(AuthContext)</code>.</span></div>
+          <div class="file-entry"><span class="file-name">useFeed.ts</span> <span class="file-sep">—</span> <span class="file-desc">Manages feed state, pagination, pull-to-refresh, phriends-only filter toggle. Calls <code>postApi.getFeed()</code>.</span></div>
+        </div>
+      </div>
+
+      <div class="folder-card blue">
+        <div class="folder-name"><span class="icon">🎨</span> theme/ <span class="path">src/theme/</span></div>
+        <div class="folder-desc">The design system. Defines colors (light + dark), typography scales, spacing tokens, and a unified <code>useTheme()</code> hook. Components import from theme — they never hardcode colors or font sizes.</div>
+      </div>
+
+      <div class="folder-card purple">
+        <div class="folder-name"><span class="icon">🧩</span> components/ <span class="path">src/components/</span></div>
+        <div class="folder-desc">Reusable UI building blocks organized into subfolders by purpose: <code>common/</code> for primitives (Button, Input, Avatar), <code>cards/</code> for data display cards, <code>forms/</code> for creation forms, <code>layout/</code> for structural elements. Components are presentation-focused and receive data via props.</div>
+      </div>
+
+      <div class="folder-card amber">
+        <div class="folder-name"><span class="icon">📱</span> screens/ <span class="path">src/screens/</span></div>
+        <div class="folder-desc">Full-page views, one per navigation route. Screens are organized into feature subfolders (auth, feed, passions, events, social, profile, notifications). Each screen composes components + hooks to build the complete UI. Screens are the only files registered in the navigator.</div>
+      </div>
+
+      <div class="folder-card rose">
+        <div class="folder-name"><span class="icon">🧭</span> navigation/ <span class="path">src/navigation/</span></div>
+        <div class="folder-desc">React Navigation configuration. <code>AppNavigator.tsx</code> defines the stack/tab structure and conditionally renders auth vs main flows based on <code>useAuth()</code>. <code>types.ts</code> exports <code>RootStackParamList</code> so every <code>navigation.navigate()</code> call is type-safe.</div>
+      </div>
+
+      <div class="folder-card green">
+        <div class="folder-name"><span class="icon">📦</span> assets/ <span class="path">src/assets/</span></div>
+        <div class="folder-desc">Static resources: images (logos, icons, placeholders), Lottie animations (loading, success, empty states), and custom fonts. Subfoldered by type. Referenced via <code>require()</code> or asset modules.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 3: CONVENTIONS ==================== -->
+  <div class="tab-panel" id="panel-3">
+    <div class="section-header">
+      <div class="section-icon rules">📐</div>
+      <div>
+        <div class="section-title">Naming Conventions & File Creation Rules</div>
+        <div class="section-subtitle">How to name, where to place, and when to create new files</div>
+      </div>
+    </div>
+
+    <h3 style="color: var(--accent-blue); font-family: var(--mono); font-size: 16px; margin-bottom: 12px; margin-top: 8px;">Naming Convention Matrix</h3>
+
+    <table class="naming-table">
+      <thead>
+        <tr><th>Layer</th><th>Convention</th><th>Example</th><th>Suffix</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="layer">Backend — schemas</td><td class="conv">snake_case</td><td class="ex">passion_schema.py</td><td class="conv">_schema.py</td></tr>
+        <tr><td class="layer">Backend — routers</td><td class="conv">snake_case</td><td class="ex">passion_router.py</td><td class="conv">_router.py</td></tr>
+        <tr><td class="layer">Backend — services</td><td class="conv">snake_case</td><td class="ex">passion_service.py</td><td class="conv">_service.py</td></tr>
+        <tr><td class="layer">Backend — migrations</td><td class="conv">snake_case</td><td class="ex">003_create_passions.sql</td><td class="conv">NNN_verb_noun.sql</td></tr>
+        <tr><td class="layer">Backend — lib</td><td class="conv">snake_case</td><td class="ex">supabase_client.py</td><td class="conv">(descriptive)</td></tr>
+        <tr style="border-top: 2px solid var(--border)"><td class="layer">Frontend — screens</td><td class="conv">PascalCase</td><td class="ex">PassionDetailScreen.tsx</td><td class="conv">Screen.tsx</td></tr>
+        <tr><td class="layer">Frontend — components</td><td class="conv">PascalCase</td><td class="ex">PostCard.tsx</td><td class="conv">(descriptive)</td></tr>
+        <tr><td class="layer">Frontend — hooks</td><td class="conv">camelCase</td><td class="ex">usePassions.ts</td><td class="conv">use*.ts</td></tr>
+        <tr><td class="layer">Frontend — api</td><td class="conv">camelCase</td><td class="ex">passionApi.ts</td><td class="conv">Api.ts</td></tr>
+        <tr><td class="layer">Frontend — types</td><td class="conv">camelCase</td><td class="ex">passion.ts</td><td class="conv">.ts</td></tr>
+        <tr><td class="layer">Frontend — lib/config</td><td class="conv">camelCase</td><td class="ex">apiClient.ts</td><td class="conv">.ts</td></tr>
+      </tbody>
+    </table>
+
+    <div style="height: 36px;"></div>
+
+    <h3 style="color: var(--accent-green); font-family: var(--mono); font-size: 16px; margin-bottom: 16px;">File Creation Decision Rules</h3>
+
+    <div class="rules-grid">
+      <div class="rule-card">
+        <h4>📐 Adding a New Domain Entity</h4>
+        <p>When you add a new table to the database (e.g., <code>tags</code>), you must create files across <strong>all layers</strong> in this exact order:</p>
+        <div class="rule-example">
+<span class="dim">1.</span> migrations/<span class="hl">010_create_tags.sql</span>
+<span class="dim">2.</span> schemas/<span class="hl">tag_schema.py</span>
+<span class="dim">3.</span> services/<span class="hl">tag_service.py</span>
+<span class="dim">4.</span> routers/<span class="hl">tag_router.py</span>
+<span class="dim">5.</span> <span class="hl2">main.py</span> → add <span class="hl">include_router(tag_router)</span>
+<span class="dim">---</span>
+<span class="dim">6.</span> src/types/<span class="hl">tag.ts</span>
+<span class="dim">7.</span> src/api/<span class="hl">tagApi.ts</span>
+<span class="dim">8.</span> src/hooks/<span class="hl">useTags.ts</span>
+<span class="dim">9.</span> src/screens/tags/<span class="hl">TagScreen.tsx</span>
+<span class="dim">10.</span> src/navigation/<span class="hl2">types.ts</span> → add route params
+        </div>
+      </div>
+
+      <div class="rule-card">
+        <h4>🧩 Adding a Reusable Component</h4>
+        <p>Before creating a new component, check if an existing one can be extended with props. New components go in the appropriate subfolder based on their purpose.</p>
+        <div class="rule-example">
+<span class="dim">Primitive (button, input, toggle)?</span>
+  → components/<span class="hl">common/</span>ComponentName.tsx
+
+<span class="dim">Data display card?</span>
+  → components/<span class="hl">cards/</span>EntityCard.tsx
+
+<span class="dim">Form for entity creation/edit?</span>
+  → components/<span class="hl">forms/</span>CreateEntityForm.tsx
+
+<span class="dim">Layout/structural?</span>
+  → components/<span class="hl">layout/</span>ComponentName.tsx
+        </div>
+      </div>
+
+      <div class="rule-card">
+        <h4>🛤️ Adding a New API Endpoint</h4>
+        <p>A new endpoint always requires changes in <strong>three</strong> backend files. If it's a new HTTP method on an existing entity, add to the existing files. If it's a new sub-resource, consider whether it belongs in the parent's files or needs its own.</p>
+        <div class="rule-example">
+<span class="dim">Backend:</span>
+  schemas/<span class="hl">entity_schema.py</span> → add input/output model
+  services/<span class="hl">entity_service.py</span> → add business logic
+  routers/<span class="hl">entity_router.py</span> → add route decorator
+
+<span class="dim">Frontend:</span>
+  api/<span class="hl">entityApi.ts</span> → add typed function
+  hooks/<span class="hl">useEntity.ts</span> → expose to screens
+        </div>
+      </div>
+
+      <div class="rule-card">
+        <h4>🗄️ Adding a Migration</h4>
+        <p>Never edit existing migrations. Always create a new file with the next sequential number. Each migration is additive.</p>
+        <div class="rule-example">
+<span class="dim">Next available number:</span> check last file number + 1
+<span class="dim">Name format:</span> <span class="hl">NNN_verb_noun.sql</span>
+<span class="dim">Verbs:</span> create, alter, add, drop, create_index
+
+<span class="dim">Examples:</span>
+  <span class="hl">010_add_passion_tags.sql</span>
+  <span class="hl">011_create_index_posts_feed.sql</span>
+  <span class="hl">012_alter_events_add_timezone.sql</span>
+        </div>
+      </div>
+
+      <div class="rule-card">
+        <h4>📱 Adding a New Screen</h4>
+        <p>Every screen belongs in a feature subfolder under <code>screens/</code>. After creating the file, register it in the navigator and add its params to the type definitions.</p>
+        <div class="rule-example">
+<span class="dim">1.</span> screens/<span class="hl">feature/</span><span class="hl">FeatureScreen.tsx</span>
+<span class="dim">2.</span> navigation/<span class="hl2">types.ts</span>
+     → add to RootStackParamList
+<span class="dim">3.</span> navigation/<span class="hl2">AppNavigator.tsx</span>
+     → add &lt;Stack.Screen&gt;
+        </div>
+      </div>
+
+      <div class="rule-card">
+        <h4>⛔ What NOT to Do</h4>
+        <p>These anti-patterns break the architecture's separation of concerns and must be avoided.</p>
+        <div class="rule-example">
+<span class="hl">✗</span> Screens calling apiClient directly
+    → use hooks, which use api/ functions
+
+<span class="hl">✗</span> Routers containing business logic
+    → delegate everything to services
+
+<span class="hl">✗</span> Components importing from api/
+    → pass data via props from screens
+
+<span class="hl">✗</span> Hardcoded colors or font sizes
+    → import from theme/
+
+<span class="hl">✗</span> Editing existing migration files
+    → create a new sequential migration
+
+<span class="hl">✗</span> Services importing from routers
+    → dependencies flow downward only
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 4: DATA FLOW ==================== -->
+  <div class="tab-panel" id="panel-4">
+    <div class="section-header">
+      <div class="section-icon flow">🔄</div>
+      <div>
+        <div class="section-title">Data Flow & File Interactions</div>
+        <div class="section-subtitle">How data moves through the stack — from user tap to database and back</div>
+      </div>
+    </div>
+
+    <div class="flow-section">
+      <div class="flow-title">Full Request Lifecycle (e.g., creating a post)</div>
+      <div class="flow-diagram">
+        <div class="flow-row">
+          <div class="flow-box user">👤 User Tap</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box screen">screens/ PostDetailScreen</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box hook">hooks/ useFeed</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box api">api/ postApi.createPost()</div>
+        </div>
+        <div class="flow-row">
+          <span class="flow-label" style="margin-left: 0;">↓ HTTP POST via apiClient (JWT auto-attached)</span>
+        </div>
+        <div class="flow-row">
+          <div class="flow-box router">routers/ post_router.py</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box schema">schemas/ PostCreate (validate)</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box service">services/ post_service.create_post()</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box db">Supabase / PostgreSQL</div>
+        </div>
+        <div class="flow-row">
+          <span class="flow-label" style="margin-left: 0;">↓ Response: PostResponse schema → JSON → TypeScript Post type</span>
+        </div>
+        <div class="flow-row">
+          <div class="flow-box db">DB Row</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box schema">schemas/ PostResponse</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box api">api/ postApi → Post</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box hook">hooks/ useFeed (update state)</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box screen">Screen re-renders</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-section">
+      <div class="flow-title">Authentication Flow</div>
+      <div class="flow-diagram">
+        <div class="flow-row">
+          <div class="flow-box screen">LoginScreen</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box hook">useAuth.login()</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box api">authApi.login()</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box router">auth_router /login</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box service">auth_service</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box db">Supabase Auth</div>
+        </div>
+        <div class="flow-row">
+          <span class="flow-label" style="margin-left: 0;">↓ JWT returned → secureStorage.setToken() → AuthContext updates → AppNavigator renders main stack</span>
+        </div>
+        <div class="flow-row">
+          <div class="flow-box lib">secureStorage</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box api">apiClient interceptor</div>
+          <span class="flow-label">Auto-attaches Authorization: Bearer &lt;token&gt; to every request</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-section">
+      <div class="flow-title">Backend Dependency Direction (strict — never reversed)</div>
+      <div class="flow-diagram">
+        <div class="flow-row">
+          <div class="flow-box router" style="font-weight: 700;">main.py</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box router">routers/</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box service">services/</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box lib">lib/</div>
+        </div>
+        <div class="flow-row" style="margin-top: -4px;">
+          <span class="flow-label" style="margin-left: 0;">schemas/ is referenced horizontally by routers (for validation) and services (for response shaping)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-section">
+      <div class="flow-title">Frontend Dependency Direction (strict — never reversed)</div>
+      <div class="flow-diagram">
+        <div class="flow-row">
+          <div class="flow-box screen">screens/</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box hook">hooks/</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box api">api/</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box lib">lib/apiClient</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box lib">lib/secureStorage</div>
+        </div>
+        <div class="flow-row" style="margin-top: -4px;">
+          <span class="flow-label" style="margin-left: 0;">types/ is referenced horizontally by api/, hooks/, screens/, and components/ for type safety</span>
+        </div>
+        <div class="flow-row">
+          <div class="flow-box screen">screens/</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box hook" style="background: rgba(139,108,193,0.1); border-color: rgba(139,108,193,0.3); color: var(--accent-purple);">components/</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-box lib" style="background: rgba(212,168,67,0.1); border-color: rgba(212,168,67,0.3); color: var(--accent-amber);">theme/</div>
+          <span class="flow-label">Components import theme tokens, screens compose components</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-section">
+      <div class="flow-title">Cross-Layer Interaction Map</div>
+
+      <table class="interaction-table">
+        <thead>
+          <tr><th>From</th><th>To</th><th>Interaction</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="from">screens/*</td><td class="to">hooks/*</td><td class="how">Screens call hooks to get state + actions. Never call api/ directly.</td></tr>
+          <tr><td class="from">screens/*</td><td class="to">components/*</td><td class="how">Screens render components, passing data as props. Components are stateless when possible.</td></tr>
+          <tr><td class="from">hooks/*</td><td class="to">api/*</td><td class="how">Hooks call API functions, manage loading/error state, and expose clean return values.</td></tr>
+          <tr><td class="from">hooks/*</td><td class="to">context/*</td><td class="how"><code>useAuth()</code> wraps <code>AuthContext</code>. Future hooks may consume other contexts.</td></tr>
+          <tr><td class="from">api/*</td><td class="to">lib/apiClient</td><td class="how">Every API function uses the shared Axios instance for requests.</td></tr>
+          <tr><td class="from">lib/apiClient</td><td class="to">lib/secureStorage</td><td class="how">Request interceptor reads JWT from Keychain before each call.</td></tr>
+          <tr><td class="from">context/AuthContext</td><td class="to">lib/supabase</td><td class="how">Listens to <code>onAuthStateChange</code>, persists sessions via secureStorage.</td></tr>
+          <tr><td class="from">navigation/AppNavigator</td><td class="to">hooks/useAuth</td><td class="how">Reads auth state to decide: show auth stack or main tab navigator.</td></tr>
+          <tr><td class="from">components/*</td><td class="to">theme/*</td><td class="how">All styling references theme tokens. No hardcoded values.</td></tr>
+          <tr style="border-top: 2px solid var(--border-active);"><td class="from">routers/*</td><td class="to">services/*</td><td class="how">Each route handler delegates to the corresponding service function.</td></tr>
+          <tr><td class="from">routers/*</td><td class="to">schemas/*</td><td class="how">FastAPI auto-validates request bodies against Pydantic <code>Create</code> models.</td></tr>
+          <tr><td class="from">routers/*</td><td class="to">lib/auth</td><td class="how">Protected routes inject <code>Depends(get_current_user)</code> for JWT verification.</td></tr>
+          <tr><td class="from">routers/*</td><td class="to">lib/permissions</td><td class="how">Role-gated routes inject <code>Depends(require_passion_role("admin"))</code>.</td></tr>
+          <tr><td class="from">services/*</td><td class="to">lib/supabase_client</td><td class="how">All DB queries go through the shared Supabase client instance.</td></tr>
+          <tr><td class="from">services/*</td><td class="to">schemas/*</td><td class="how">Services construct <code>Response</code> models to return typed data to routers.</td></tr>
+          <tr><td class="from">services/*</td><td class="to">lib/exceptions</td><td class="how">Services raise custom exceptions that routers' error handlers convert to HTTP responses.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div style="height: 80px;"></div>
+
+<script>
+function switchTab(index) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
+  document.querySelectorAll('.tab-panel').forEach((p, i) => p.classList.toggle('active', i === index));
+}
+</script>
+
+</body>
+</html>
