@@ -7,6 +7,8 @@
 
 import { NewAppScreen } from '@react-native/new-app-screen';
 import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import { AuthProvider } from './src/context/AuthContext';
+
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -16,10 +18,12 @@ function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
   return (
+    <AuthProvider>
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <AppContent />
     </SafeAreaProvider>
+    </AuthProvider>
   );
 }
 

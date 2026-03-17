@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvp/bin/pip install:*)",
+      "Bash(npm install:*)"
+    ]
+  }
+}
