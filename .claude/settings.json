@@ -3,6 +3,9 @@
     "allow": [
       "Bash(mvp/bin/pip install:*)",
       "Bash(npm install:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/ebod/Projects/mvp/frontend/src"
     ]
   }
 }
