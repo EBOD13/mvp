@@ -10,20 +10,24 @@
     "test": "jest"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^3.0.1",
+    "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-native/new-app-screen": "0.84.1",
+    "@react-navigation/native": "^7.2.0",
+    "@react-navigation/stack": "^7.8.7",
     "@supabase/supabase-js": "^2.99.2",
     "axios": "^1.13.6",
     "react": "19.2.3",
     "react-native": "0.84.1",
+    "react-native-gesture-handler": "^2.30.0",
     "react-native-keychain": "^10.0.0",
-    "react-native-safe-area-context": "^5.5.2"
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-url-polyfill": "^3.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.25.0",
-    "@react-native-community/cli": "20.1.0",
+    "@react-native-community/cli": "^20.1.0",
     "@react-native-community/cli-platform-android": "20.1.0",
     "@react-native-community/cli-platform-ios": "20.1.0",
     "@react-native/babel-preset": "0.84.1",
