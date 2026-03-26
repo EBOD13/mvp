@@ -5,7 +5,7 @@
 CREATE TABLE IF NOT EXISTS posts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     author_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    passion_id UUID REFERENCES passions(id) ON DELETE SET NULL,
+    passion_id UUID REFERENCES,
     content TEXT NOT NULL,
     media_urls TEXT[] DEFAULT '{}',
     like_count INT DEFAULT 0,
