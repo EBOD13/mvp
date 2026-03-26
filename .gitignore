@@ -2,3 +2,4 @@
 .env.example
 \keys
 keys
+node_modules
