@@ -176,23 +176,22 @@ async def delete_post(post_id: UUID, user_id: UUID) -> None:
 # ──────────────────────────────────────────────
 
 async def like_post(post_id: UUID, user_id: UUID) -> None:
-    """
-    Like a post. Inserts a row into post_likes and bumps the cached like_count.
-    If the user already liked it, Supabase will reject the duplicate (PRIMARY KEY).
-    """
-    supabase.table("post_likes").insert({
-        "user_id": str(user_id),
-        "post_id": str(post_id),
-    }).execute()
+    try:
+        supabase.table("post_likes").insert({
+            "user_id": str(user_id),
+            "post_id": str(post_id),
+        }).execute()
+    except Exception as e:
+        # Code 23505 means duplicate — user already liked this post, just ignore it
+        if "23505" in str(e):
+            return
+        raise e  # Any other error, let it bubble up normally
 
-    # Increment the cached counter on the posts table
-    # This avoids a slow COUNT query every time we load the feed
     supabase.rpc("increment_field", {
         "table_name": "posts",
         "field_name": "like_count",
         "row_id": str(post_id),
     }).execute()
-
 
 async def unlike_post(post_id: UUID, user_id: UUID) -> None:
     """Remove a like and decrement the cached counter."""
@@ -214,11 +213,16 @@ async def unlike_post(post_id: UUID, user_id: UUID) -> None:
 # ──────────────────────────────────────────────
 
 async def save_post(post_id: UUID, user_id: UUID) -> None:
-    """Bookmark a post. Same pattern as liking."""
-    supabase.table("post_saves").insert({
-        "user_id": str(user_id),
-        "post_id": str(post_id),
-    }).execute()
+    try:
+        supabase.table("post_saves").insert({
+            "user_id": str(user_id),
+            "post_id": str(post_id),
+        }).execute()
+    except Exception as e:
+        # Already saved, just ignore it
+        if "23505" in str(e):
+            return
+        raise e
 
     supabase.rpc("increment_field", {
         "table_name": "posts",
