@@ -8,10 +8,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
+import { useAuth } from '../../hooks/useAuth';
+import { spacing} from '../../theme/spacing';
 
 type LoginNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -46,15 +49,19 @@ const FONT_SIZES = {
 
 const LoginScreen = () => {
   const navigation = useNavigation<LoginNavigationProp>();
+  const { login } = useAuth();
 
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    console.log('Login form values:', {
-      usernameOrEmail,
-      password,
-    });
+  const handleLogin = async () => {
+    try {
+      await login(usernameOrEmail.trim(), password);
+      Alert.alert('Logged in', 'You have successfully signed in.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Login failed';
+      Alert.alert('Login failed', message);
+    }
   };
 
   return (

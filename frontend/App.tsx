@@ -9,6 +9,7 @@ import 'react-native-url-polyfill/auto';
 import React from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
 import { AuthProvider } from './src/context/AuthContext';
+import { enableScreens } from 'react-native-screens';
 
 import {
   SafeAreaProvider,
@@ -24,6 +25,8 @@ import { RootStackParamList } from './src/navigation/types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
+
+enableScreens();
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';

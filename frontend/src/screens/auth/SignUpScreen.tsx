@@ -9,10 +9,12 @@ import {
   Platform,
   ScrollView,
   Pressable,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
+import { useAuth } from '../../hooks/useAuth';
 
 type SignUpNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -47,6 +49,7 @@ const FONT_SIZES = {
 
 const SignUpScreen = () => {
   const navigation = useNavigation<SignUpNavigationProp>();
+  const { signup } = useAuth();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -56,16 +59,25 @@ const SignUpScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  const handleCreateAccount = () => {
-    console.log('Sign up form values:', {
-      firstName,
-      lastName,
-      username,
-      email,
-      password,
-      confirmPassword,
-      agreedToTerms,
-    });
+  const handleCreateAccount = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert('Invalid password', 'Passwords do not match.');
+      return;
+    }
+
+    if (!agreedToTerms) {
+      Alert.alert('Terms required', 'You must agree to the Terms and Conditions.');
+      return;
+    }
+
+    try {
+      await signup(email.trim(), password, username.trim(), `${firstName.trim()} ${lastName.trim()}`.trim());
+      Alert.alert('Account created', 'Your account was successfully created.');
+      navigation.navigate('LoginScreen');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Sign up failed';
+      Alert.alert('Sign up failed', message);
+    }
   };
 
   return (

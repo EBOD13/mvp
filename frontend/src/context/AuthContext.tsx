@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
-import { setToken, clearToken } from '../lib/secureStorage';
+import { getToken, setToken, clearToken } from '../lib/secureStorage';
+import * as authApi from '../api/authApi';
 
 interface AuthContextValue {
-  user: User | null;
-  session: Session | null;
+  userId: string | null;
+  accessToken: string | null;
   isLoading: boolean;
   login: (identifier: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, displayName: string) => Promise<void>;
@@ -15,68 +14,63 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      if (data.session?.access_token) {
-        setToken(data.session.access_token);
-      }
+    let mounted = true;
+
+    async function restoreSession() {
+      const token = await getToken();
+      if (!mounted) return;
+      setAccessToken(token);
       setIsLoading(false);
-    });
+    }
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      if (newSession?.access_token) {
-        setToken(newSession.access_token);
-      } else {
-        clearToken();
-      }
-    });
+    restoreSession();
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   async function login(identifier: string, password: string) {
-    const isEmail = identifier.includes('@');
-    let email = identifier;
-
-    if (!isEmail) {
-      const { data, error } = await supabase
-        .from('users')
-        .select('email')
-        .eq('username', identifier)
-        .single();
-      if (error || !data) throw new Error('Username not found');
-      email = data.email;
-    }
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    const response = await authApi.login(identifier, password);
+    await setToken(response.access_token);
+    setAccessToken(response.access_token);
+    setUserId(response.user_id);
   }
 
   async function signup(email: string, password: string, username: string, displayName: string) {
-    const { error } = await supabase.auth.signUp({
+    const response = await authApi.signup({
       email,
       password,
-      options: {
-        data: { username, display_name: displayName },
-      },
+      username,
+      display_name: displayName,
     });
-    if (error) throw error;
+    await setToken(response.access_token);
+    setAccessToken(response.access_token);
+    setUserId(response.user_id);
   }
 
   async function logout() {
-    await supabase.auth.signOut();
+    await clearToken();
+    setAccessToken(null);
+    setUserId(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{
+        userId,
+        accessToken,
+        isLoading,
+        login,
+        signup,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
