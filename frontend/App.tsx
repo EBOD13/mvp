@@ -19,6 +19,7 @@ import SignUpScreen  from './src/screens/auth/SignUpScreen';
 import HomeFeedScreen      from './src/screens/feed/HomeFeedScreen';
 import CreatePostScreen    from './src/screens/feed/CreatePostScreen';
 import ProfileScreen       from './src/screens/profile/ProfileScreen';
+import EditProfileScreen   from './src/screens/stub/EditProfileScreen';
 import CreatePassionScreen from './src/screens/stub/CreatePassionScreen';
 import OtherUserScreen     from './src/screens/stub/OtherUserScreen';
 
@@ -51,6 +52,7 @@ function AppNavigator() {
               <Stack.Screen name="CreatePostScreen"    component={CreatePostScreen} />
               <Stack.Screen name="CreatePassionScreen" component={CreatePassionScreen} />
               <Stack.Screen name="OtherUserScreen"     component={OtherUserScreen} />
+              <Stack.Screen name="EditProfileScreen"   component={EditProfileScreen} />
             </>
           ) : (
             // ── Unauthenticated stack ────────────────────────────────────

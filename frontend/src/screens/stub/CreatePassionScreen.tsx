@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 
 const CreatePassionScreen: React.FC = () => {
@@ -8,7 +9,8 @@ const CreatePassionScreen: React.FC = () => {
   const { colors, spacing, fontSizes, fontWeights } = useTheme();
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: spacing['6'] }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing['6'] }}>
       <Text style={{ fontSize: fontSizes['2xl'], fontWeight: fontWeights.bold, color: colors.textPrimary, marginBottom: spacing['3'] }}>
         Create a Passion Group
       </Text>
@@ -19,6 +21,7 @@ const CreatePassionScreen: React.FC = () => {
         <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.primary }}>Go Back</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 };
 

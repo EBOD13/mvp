@@ -10,6 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
 import { useFeed } from '../../hooks/useFeed';
@@ -138,14 +139,14 @@ const HomeFeedScreen: React.FC = () => {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <View style={{
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: spacing['4'],
-        paddingTop: spacing['5'],
+        paddingTop: spacing['3'],
         paddingBottom: spacing['3'],
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
@@ -244,7 +245,7 @@ const HomeFeedScreen: React.FC = () => {
           onClose={() => setCommentPostId(null)}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 

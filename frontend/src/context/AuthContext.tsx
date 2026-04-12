@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getToken, setToken, clearToken } from '../lib/secureStorage';
 import * as authApi from '../api/authApi';
+import apiClient from '../lib/apiClient';
 
 interface AuthContextValue {
   userId: string | null;
@@ -17,6 +18,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Auto-logout on any 401 — covers expired tokens the backend now returns correctly
+  useEffect(() => {
+    const id = apiClient.interceptors.response.use(
+      res => res,
+      async err => {
+        if (err.response?.status === 401) {
+          await clearToken();
+          setAccessToken(null);
+          setUserId(null);
+        }
+        return Promise.reject(err);
+      },
+    );
+    return () => apiClient.interceptors.response.eject(id);
+  }, []); // setAccessToken / setUserId are stable setState references
 
   useEffect(() => {
     let mounted = true;

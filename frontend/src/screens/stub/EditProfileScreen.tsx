@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 
-const OtherUserScreen: React.FC = () => {
+const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation();
   const { colors, spacing, fontSizes, fontWeights } = useTheme();
 
@@ -12,7 +12,7 @@ const OtherUserScreen: React.FC = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing['6'] }}>
       <Text style={{ fontSize: fontSizes['2xl'], fontWeight: fontWeights.bold, color: colors.textPrimary, marginBottom: spacing['3'] }}>
-        User Profile
+        Edit Profile
       </Text>
       <Text style={{ fontSize: fontSizes.md, color: colors.textSecondary, textAlign: 'center', marginBottom: spacing['6'] }}>
         This screen is coming soon.
@@ -25,4 +25,4 @@ const OtherUserScreen: React.FC = () => {
   );
 };
 
-export default OtherUserScreen;
+export default EditProfileScreen;

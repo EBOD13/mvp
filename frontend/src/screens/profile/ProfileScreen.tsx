@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { Avatar } from '../../components/common/Avatar';
 import { Button } from '../../components/common/Button';
 import BottomNavBar from '../../components/layout/BottomNavBar';
 import FloatingActionButton from '../../components/layout/FloatingActionButton';
+import { useAuth } from '../../hooks/useAuth';
 
 /*
 TODO(ProfileScreen) explicit checklist:
@@ -38,10 +40,11 @@ const profileData = {
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileNavigationProp>();
   const { colors, spacing, textVariants } = useTheme();
+  const { logout } = useAuth();
   const [fabVisible, setFabVisible] = useState(false);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View style={{ flex: 1, paddingHorizontal: spacing['4'], paddingVertical: spacing['4'] }}>
         {/* Avatar with real name initials fallback. */}
@@ -87,6 +90,13 @@ const ProfileScreen = () => {
           size="md"
           style={{ marginTop: spacing['4'] }}
         />
+        <Button
+          label="Sign Out"
+          onPress={logout}
+          variant="outline"
+          size="md"
+          style={{ marginTop: spacing['3'] }}
+        />
       </View>
       </ScrollView>
       <BottomNavBar
@@ -98,7 +108,7 @@ const ProfileScreen = () => {
         onClose={() => setFabVisible(false)}
         position="right"
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
