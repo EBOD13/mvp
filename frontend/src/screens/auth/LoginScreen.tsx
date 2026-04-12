@@ -57,7 +57,7 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     try {
       await login(usernameOrEmail.trim(), password);
-      Alert.alert('Logged in', 'You have successfully signed in.');
+      // Navigation to HomeFeedScreen is handled automatically by the auth gate in App.tsx
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Login failed';
       Alert.alert('Login failed', message);

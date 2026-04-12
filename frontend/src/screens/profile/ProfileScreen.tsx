@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -6,6 +6,8 @@ import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { Avatar } from '../../components/common/Avatar';
 import { Button } from '../../components/common/Button';
+import BottomNavBar from '../../components/layout/BottomNavBar';
+import FloatingActionButton from '../../components/layout/FloatingActionButton';
 
 /*
 TODO(ProfileScreen) explicit checklist:
@@ -36,9 +38,11 @@ const profileData = {
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileNavigationProp>();
   const { colors, spacing, textVariants } = useTheme();
+  const [fabVisible, setFabVisible] = useState(false);
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View style={{ flex: 1, paddingHorizontal: spacing['4'], paddingVertical: spacing['4'] }}>
         {/* Avatar with real name initials fallback. */}
         <View style={{ alignItems: 'center', marginBottom: spacing['6'] }}>
@@ -84,7 +88,17 @@ const ProfileScreen = () => {
           style={{ marginTop: spacing['4'] }}
         />
       </View>
-    </ScrollView>
+      </ScrollView>
+      <BottomNavBar
+        activeRoute="ProfileScreen"
+        onAddPress={() => setFabVisible(v => !v)}
+      />
+      <FloatingActionButton
+        visible={fabVisible}
+        onClose={() => setFabVisible(false)}
+        position="right"
+      />
+    </View>
   );
 };
 
