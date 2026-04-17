@@ -28,9 +28,9 @@ type ProfileNavigationProp = StackNavigationProp<ProfileRoutes, 'ProfileScreen'>
 // Placeholder display data for local UI validation only.
 const profileData = {
   fullName: 'Daniel Esambu',
-  username: '@daniel',
-  bio: 'Building practical products that empower people and simplify everyday life.',
-  passions: ['Music', 'Product Design', 'Travel'],
+  username: '@danielissocool',
+  bio: 'Talking about my favorite passions and my opinions about them',
+  passions: ['Taylor Swift', 'Bridgerton', 'Marty Supreme'],
 };
 
 const ProfileScreen = () => {

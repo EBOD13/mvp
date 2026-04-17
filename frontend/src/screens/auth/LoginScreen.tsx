@@ -103,6 +103,16 @@ const LoginScreen = () => {
               <Text style={styles.primaryButtonText}>Log In</Text>
             </TouchableOpacity>
 
+            {__DEV__ ? (
+              <TouchableOpacity
+                style={styles.devButton}
+                onPress={() => navigation.navigate('ProfileScreen')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.devButtonText}>DEV: Go to Profile</Text>
+              </TouchableOpacity>
+            ) : null}
+
             {/* TODO: Replace TouchableOpacity with shared Button component when available */}
             <TouchableOpacity
               onPress={() => console.log('Forgot password pressed')}
@@ -186,6 +196,19 @@ const styles = StyleSheet.create({
     color: COLORS.buttonText,
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
+  },
+  devButton: {
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 10,
+    paddingVertical: SPACING.md,
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  devButtonText: {
+    color: COLORS.primary,
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '700',
   },
 //* TODO: remove once component is added (consult if this needs to stay for layout purposes) *
   textButton: {

@@ -3,3 +3,5 @@
 \keys
 keys
 node_modules
+venv/
+.venv/
