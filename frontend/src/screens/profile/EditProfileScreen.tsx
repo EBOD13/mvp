@@ -9,7 +9,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -56,25 +56,27 @@ const EditProfileScreen = () => {
 
   const handlePickPhoto = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission Required',
-          'We need permission to access your photos to change your profile picture.'
-        );
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+      });
+
+      if (result.didCancel) {
         return;
       }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
+      if (result.errorCode) {
+        console.error('Error picking image:', result.errorMessage || result.errorCode);
+        Alert.alert('Error', 'Failed to pick an image. Please try again.');
+        return;
+      }
 
-      if (!result.cancelled) {
-        setProfilePhoto(result.uri);
-        console.log('Profile photo selected:', result.uri);
+      const selectedPhotoUri = result.assets?.[0]?.uri;
+      if (selectedPhotoUri) {
+        setProfilePhoto(selectedPhotoUri);
+        console.log('Profile photo selected:', selectedPhotoUri);
+      } else {
+        Alert.alert('Error', 'No image was selected. Please try again.');
       }
     } catch (error) {
       console.error('Error picking image:', error);

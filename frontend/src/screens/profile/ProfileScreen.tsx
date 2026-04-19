@@ -1,15 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { Avatar } from '../../components/common/Avatar';
 import { Button } from '../../components/common/Button';
-import BottomNavBar from '../../components/layout/BottomNavBar';
-import FloatingActionButton from '../../components/layout/FloatingActionButton';
-import { useAuth } from '../../hooks/useAuth';
 
 /*
 TODO(ProfileScreen) explicit checklist:
@@ -32,20 +28,17 @@ type ProfileNavigationProp = StackNavigationProp<ProfileRoutes, 'ProfileScreen'>
 // Placeholder display data for local UI validation only.
 const profileData = {
   fullName: 'Daniel Esambu',
-  username: '@daniel',
-  bio: 'Building practical products that empower people and simplify everyday life.',
-  passions: ['Music', 'Product Design', 'Travel'],
+  username: '@danielissocool',
+  bio: 'Talking about my favorite passions and my opinions about them',
+  passions: ['Taylor Swift', 'Bridgerton', 'Marty Supreme'],
 };
 
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileNavigationProp>();
   const { colors, spacing, textVariants } = useTheme();
-  const { logout } = useAuth();
-  const [fabVisible, setFabVisible] = useState(false);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View style={{ flex: 1, paddingHorizontal: spacing['4'], paddingVertical: spacing['4'] }}>
         {/* Avatar with real name initials fallback. */}
         <View style={{ alignItems: 'center', marginBottom: spacing['6'] }}>
@@ -90,25 +83,8 @@ const ProfileScreen = () => {
           size="md"
           style={{ marginTop: spacing['4'] }}
         />
-        <Button
-          label="Sign Out"
-          onPress={logout}
-          variant="outline"
-          size="md"
-          style={{ marginTop: spacing['3'] }}
-        />
       </View>
-      </ScrollView>
-      <BottomNavBar
-        activeRoute="ProfileScreen"
-        onAddPress={() => setFabVisible(v => !v)}
-      />
-      <FloatingActionButton
-        visible={fabVisible}
-        onClose={() => setFabVisible(false)}
-        position="right"
-      />
-    </SafeAreaView>
+    </ScrollView>
   );
 };
 
