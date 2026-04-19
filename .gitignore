@@ -3,3 +3,12 @@
 \keys
 keys
 .vercel
+
+# Python environments and caches
+backend/.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Node dependencies
+node_modules/
