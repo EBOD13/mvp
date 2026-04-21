@@ -10,7 +10,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { useTheme } from '../../theme';
 import apiClient from '../../lib/apiClient';
 import { EmptyState } from '../../components/common/EmptyState';
 
@@ -26,7 +25,6 @@ interface PassionListItem {
 
 const PassionsListScreen: React.FC = () => {
   const navigation = useNavigation<Navigation>();
-  const { colors, spacing, textVariants, radii } = useTheme();
 
   const [items, setItems] = useState<PassionListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,30 +53,30 @@ const PassionsListScreen: React.FC = () => {
   }, [load]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top']}>
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          paddingHorizontal: spacing['4'],
-          paddingVertical: spacing['3'],
+          paddingHorizontal: 16,
+          paddingVertical: 12,
           borderBottomWidth: 1,
-          borderBottomColor: colors.border,
+          borderBottomColor: '#E5E7EB',
         }}
       >
         <Pressable
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-          style={{ marginRight: spacing['3'] }}
+          style={{ marginRight: 12 }}
         >
-          <Text style={[textVariants.h3 as any, { color: colors.textPrimary }]}>←</Text>
+          <Text style={{ fontSize: 22, color: '#111827' }}>←</Text>
         </Pressable>
-        <Text style={[textVariants.h3 as any, { color: colors.textPrimary }]}>My Passions</Text>
+        <Text style={{ fontSize: 17, fontWeight: '600', color: '#111827' }}>My Passions</Text>
       </View>
 
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color="#7C3AED" />
         </View>
       ) : (
         <FlatList
@@ -87,7 +85,7 @@ const PassionsListScreen: React.FC = () => {
           onRefresh={onRefresh}
           refreshing={refreshing}
           contentContainerStyle={{
-            padding: spacing['4'],
+            padding: 16,
             flexGrow: items.length === 0 ? 1 : 0,
           }}
           ListEmptyComponent={
@@ -99,24 +97,20 @@ const PassionsListScreen: React.FC = () => {
           }
           renderItem={({ item }) => (
             <Pressable
-              onPress={() =>
-                navigation.navigate('PassionDetailScreen', {
-                  passionId: item.id,
-                })
-              }
+              onPress={() => navigation.navigate('PassionDetailScreen', { passionId: item.id })}
               style={{
-                backgroundColor: colors.surface,
+                backgroundColor: '#F9FAFB',
                 borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: radii.md,
-                padding: spacing['4'],
-                marginBottom: spacing['3'],
+                borderColor: '#E5E7EB',
+                borderRadius: 8,
+                padding: 16,
+                marginBottom: 12,
               }}
             >
-              <Text style={[textVariants.h4 as any, { color: colors.textPrimary, marginBottom: spacing['1'] }]}>
+              <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
                 {item.name}
               </Text>
-              <Text style={[textVariants.body as any, { color: colors.textSecondary }]}> 
+              <Text style={{ fontSize: 13, color: '#6B7280' }}>
                 {item.member_count} members · {item.category ?? 'General'} · {item.my_role}
               </Text>
             </Pressable>

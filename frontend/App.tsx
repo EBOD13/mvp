@@ -34,7 +34,7 @@ enableScreens();
 const Stack = createStackNavigator<RootStackParamList>();
 
 function AppNavigator() {
-  const { accessToken, isLoading } = useAuthContext();
+  const { session, isLoading } = useAuthContext();
   const isDarkMode = useColorScheme() === 'dark';
 
   if (isLoading) {
@@ -50,7 +50,7 @@ function AppNavigator() {
       />
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {accessToken ? (
+          {session ? (
             // ── Authenticated stack ──────────────────────────────────────
             <>
               <Stack.Screen name="HomeFeedScreen"      component={HomeFeedScreen} />
