@@ -1,12 +1,3 @@
-/**
- * ProfileScreen — additions for Phase 2:
- *   • My Passions button → PassionsListScreen
- *   • Phriends button    → PhriendsListScreen  (confirm already present; added here if missing)
- *   • Settings icon in top-right header → SettingsScreen
- *
- * NOTE: This file shows the profile-adjacent additions in context.
- * Merge or replace your existing ProfileScreen with the additions below.
- */
 import React, { useCallback } from 'react';
 import {
   SafeAreaView,
@@ -20,18 +11,15 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../hooks/useAuth';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type RootStackParamList = {
   ProfileScreen: undefined;
+  EditProfileScreen: undefined;
   PassionsListScreen: undefined;
   PhriendsListScreen: undefined;
   SettingsScreen: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-// ─── ProfileScreen ────────────────────────────────────────────────────────────
 
 export function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -54,10 +42,8 @@ export function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ── Header ─────────────────────────────────────────────────── */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
-        {/* Settings icon — top-right */}
         <TouchableOpacity
           style={styles.settingsButton}
           onPress={handleSettingsPress}
@@ -65,13 +51,11 @@ export function ProfileScreen() {
           accessibilityLabel="Settings"
           accessibilityRole="button"
         >
-          {/* Simple gear icon via Unicode; replace with your icon lib */}
           <Text style={styles.settingsIcon}>⚙</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* ── Avatar / Name (existing content — adjust as needed) ──── */}
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>
             <Text style={styles.avatarInitial}>
@@ -84,9 +68,7 @@ export function ProfileScreen() {
           ) : null}
         </View>
 
-        {/* ── Navigation rows ──────────────────────────────────────── */}
         <View style={styles.navSection}>
-          {/* My Passions */}
           <TouchableOpacity
             style={styles.navRow}
             onPress={handlePassionsPress}
@@ -99,7 +81,6 @@ export function ProfileScreen() {
 
           <View style={styles.separator} />
 
-          {/* Phriends */}
           <TouchableOpacity
             style={styles.navRow}
             onPress={handlePhriendsPress}
@@ -110,14 +91,10 @@ export function ProfileScreen() {
             <Text style={styles.navRowChevron}>›</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Existing profile body content can follow below */}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -209,3 +186,5 @@ const styles = StyleSheet.create({
     marginLeft: 48,
   },
 });
+
+export default ProfileScreen;

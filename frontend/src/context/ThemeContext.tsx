@@ -1,87 +1,74 @@
-/**
- * ThemeContext — stub implementation.
- *
- * Reads/writes the user's theme preference from AsyncStorage under the key
- * 'theme_preference'. Full theming implementation (propagating colors, dark-
- * mode stylesheets, etc.) is tracked as a separate issue.
- */
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type ThemeMode = 'light' | 'dark';
+type ThemePreference = 'light' | 'dark';
 
 interface ThemeContextValue {
-  theme: ThemeMode;
-  setTheme: (mode: ThemeMode) => Promise<void>;
-  toggleTheme: () => Promise<void>;
+  themePreference: ThemePreference;
+  isLoading: boolean;
+  setThemePreference: (value: ThemePreference) => Promise<void>;
+  toggleThemePreference: () => Promise<void>;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+const THEME_PREFERENCE_KEY = 'theme_preference';
 
-const STORAGE_KEY = 'theme_preference';
-const DEFAULT_THEME: ThemeMode = 'light';
-
-// ─── Context ──────────────────────────────────────────────────────────────────
-
-const ThemeContext = createContext<ThemeContextValue>({
-  theme: DEFAULT_THEME,
-  setTheme: async () => {},
-  toggleTheme: async () => {},
-});
-
-// ─── Provider ─────────────────────────────────────────────────────────────────
+const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>(DEFAULT_THEME);
+  const [themePreference, setThemePreferenceState] = useState<ThemePreference>('light');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load persisted preference on mount
   useEffect(() => {
-    (async () => {
+    let mounted = true;
+
+    async function restorePreference() {
       try {
-        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        const stored = await AsyncStorage.getItem(THEME_PREFERENCE_KEY);
+        if (!mounted) return;
         if (stored === 'light' || stored === 'dark') {
-          setThemeState(stored);
+          setThemePreferenceState(stored);
         }
-      } catch {
-        // Silently fall back to default
+      } finally {
+        if (mounted) setIsLoading(false);
       }
-    })();
-  }, []);
-
-  const setTheme = useCallback(async (mode: ThemeMode) => {
-    setThemeState(mode);
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, mode);
-    } catch {
-      // Storage failure is non-fatal
     }
+
+    restorePreference();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const toggleTheme = useCallback(async () => {
-    setThemeState((prev) => {
-      const next: ThemeMode = prev === 'light' ? 'dark' : 'light';
-      AsyncStorage.setItem(STORAGE_KEY, next).catch(() => {});
-      return next;
-    });
-  }, []);
+  const setThemePreference = async (value: ThemePreference) => {
+    setThemePreferenceState(value);
+    await AsyncStorage.setItem(THEME_PREFERENCE_KEY, value);
+  };
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
+  const toggleThemePreference = async () => {
+    const next = themePreference === 'dark' ? 'light' : 'dark';
+    await setThemePreference(next);
+  };
+
+  const value = useMemo(
+    () => ({
+      themePreference,
+      isLoading,
+      setThemePreference,
+      toggleThemePreference,
+    }),
+    [themePreference, isLoading],
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-
-export function useTheme(): ThemeContextValue {
-  return useContext(ThemeContext);
+export function useThemeContext() {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) {
+    throw new Error('useThemeContext must be used inside ThemeProvider');
+  }
+  return ctx;
 }
+
+export { THEME_PREFERENCE_KEY };
