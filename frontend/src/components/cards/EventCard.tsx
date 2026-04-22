@@ -1,6 +1,7 @@
 // src/components/cards/EventCard.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { Calendar, MapPin, Users } from 'lucide-react-native';
 import { useTheme } from '../../theme';
 
 // ---------------------------------------------------------------------------
@@ -64,9 +65,8 @@ const EventCard: React.FC = () => {
       gap: spacing['2'],
     },
     metaIcon: {
-      fontSize: fontSizes.md,
       width: 20,
-      textAlign: 'center' as const,
+      alignItems: 'center' as const,
     },
     metaText: {
       fontSize: fontSizes.md,
@@ -90,9 +90,7 @@ const EventCard: React.FC = () => {
       alignItems: 'center' as const,
       gap: spacing['1'],
     },
-    attendeeIcon: {
-      fontSize: fontSizes.md,
-    },
+    attendeeIcon: {},
     attendeeCount: {
       fontSize: fontSizes.sm,
       fontWeight: fontWeights.medium,
@@ -133,7 +131,7 @@ const EventCard: React.FC = () => {
       {/* ── Meta rows: date/time + location ─────────────────────────────── */}
       <View style={s.metaSection}>
         <View style={s.metaRow}>
-          <Text style={s.metaIcon}>📅</Text>
+          <Calendar size={16} color={colors.textSecondary} style={s.metaIcon} />
           <Text style={s.metaText}>
             {event.date}
             <Text style={s.metaTimeSep}>  ·  </Text>
@@ -142,7 +140,7 @@ const EventCard: React.FC = () => {
         </View>
 
         <View style={s.metaRow}>
-          <Text style={s.metaIcon}>📍</Text>
+          <MapPin size={16} color={colors.textSecondary} style={s.metaIcon} />
           <Text style={s.metaText}>{event.location}</Text>
         </View>
       </View>
@@ -150,7 +148,7 @@ const EventCard: React.FC = () => {
       {/* ── Footer: attendee count + RSVP button ────────────────────────── */}
       <View style={s.footer}>
         <View style={s.attendeeRow}>
-          <Text style={s.attendeeIcon}>🙋</Text>
+          <Users size={16} color={colors.textSecondary} />
           <Text style={s.attendeeCount}>{event.attendeeCount} going</Text>
         </View>
 

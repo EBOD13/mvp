@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ImageBackground,
 } from 'react-native';
+import { Users } from 'lucide-react-native';
 import { useTheme } from '../../theme';
 
 export type PassionCardData = {
@@ -126,10 +127,7 @@ const PassionCard: React.FC<PassionCardProps> = ({
       flex: 1,
       minWidth: 0,
     },
-    memberIcon: {
-      fontSize: fontSizes.sm,
-      marginRight: spacing['1'],
-    },
+    memberIcon: {},
     memberCount: {
       flexShrink: 1,
       fontSize: fontSizes.xs,
@@ -196,7 +194,7 @@ const PassionCard: React.FC<PassionCardProps> = ({
 
           <View style={s.footer}>
             <View style={s.memberRow}>
-              <Text style={s.memberIcon}>👥</Text>
+              <Users size={14} color={colors.textSecondary} style={{ marginRight: spacing['1'] }} />
               <Text style={s.memberCount} numberOfLines={1}>
                 {formatMemberCount(passion.memberCount)}
               </Text>

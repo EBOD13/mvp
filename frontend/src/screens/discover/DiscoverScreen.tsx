@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -17,6 +17,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { DiscoverUser, Passion } from '../../api/passionApi';
 import PassionCard from '../../components/cards/PassionCard';
 import BottomNavBar from '../../components/layout/BottomNavBar';
+import FloatingActionButton from '../../components/layout/FloatingActionButton';
 
 const UserRow: React.FC<{
   item: DiscoverUser;
@@ -135,6 +136,7 @@ type NavProp = StackNavigationProp<RootStackParamList>;
 const DiscoverScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const { colors, spacing, fontSizes, fontWeights, borderRadius } = useTheme();
+  const [fabVisible, setFabVisible] = useState(false);
 
   const {
     passions,
@@ -340,10 +342,14 @@ const renderPassion: ListRenderItem<Passion> = ({ item }) => (
         </View>
 
         {/* ── Bottom nav ───────────────────────────────────────────────────── */}
-              <BottomNavBar
-                activeRoute="DiscoverScreen"
-                onAddPress={() => setFabVisible(v => !v)}
-              />
+        <BottomNavBar
+          activeRoute="DiscoverScreen"
+          onAddPress={() => setFabVisible(v => !v)}
+        />
+        <FloatingActionButton
+          visible={fabVisible}
+          onClose={() => setFabVisible(false)}
+        />
       </View>
     </SafeAreaView>
   );

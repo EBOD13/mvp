@@ -10,14 +10,6 @@ export interface PassionListItem {
   is_favorite: boolean;
 }
 
-export const passionApi = {
-  getMyPassions: () => apiClient.get<PassionListItem[]>('/passions/me'),
-  getUserPassions: (userId: string) => apiClient.get<PassionListItem[]>(`/passions/user/${userId}`),
-  getPassionsByUsername: (username: string) =>
-    apiClient.get<PassionListItem[]>(`/passions/by-username/${encodeURIComponent(username)}`),
-  addFavorite: (passionId: string) => apiClient.post(`/passions/${passionId}/favorite`, {}),
-  removeFavorite: (passionId: string) => apiClient.delete(`/passions/${passionId}/favorite`),
-};
 import { supabase } from '../lib/supabase';
 
 export type JoinType = 'open' | 'request';
@@ -33,7 +25,6 @@ export type PassionEvent = {
 export type Passion = {
   id: string;
   name: string;
-  slug: string | null;
   description: string;
   category: string;
   visibility: 'public' | 'private';
@@ -56,7 +47,6 @@ export type DiscoverUser = {
 type PassionRow = {
   id: string;
   name: string;
-  slug: string | null;
   description: string;
   category: string;
   visibility: 'public' | 'private';
@@ -186,7 +176,6 @@ const mapPassion = (
 ): Passion => ({
   id: row.id,
   name: row.name,
-  slug: row.slug,
   description: row.description,
   category: row.category,
   visibility: row.visibility,
@@ -200,6 +189,13 @@ const mapPassion = (
 });
 
 export const passionApi = {
+  getMyPassions: () => apiClient.get<PassionListItem[]>('/passions/me'),
+  getUserPassions: (userId: string) => apiClient.get<PassionListItem[]>(`/passions/user/${userId}`),
+  getPassionsByUsername: (username: string) =>
+    apiClient.get<PassionListItem[]>(`/passions/by-username/${encodeURIComponent(username)}`),
+  addFavorite: (passionId: string) => apiClient.post(`/passions/${passionId}/favorite`, {}),
+  removeFavorite: (passionId: string) => apiClient.delete(`/passions/${passionId}/favorite`),
+
   async getPublicPassions(
     query = '',
     offset = 0,
@@ -210,7 +206,7 @@ export const passionApi = {
     let passionsQuery = supabase
       .from('passions')
       .select(
-        'id, name, slug, description, category, visibility, join_type, cover_image_url, created_at'
+        'id, name, description, category, visibility, join_type, cover_image_url, created_at'
       )
       .eq('visibility', 'public')
       .order('name', { ascending: true })
@@ -278,7 +274,7 @@ export const passionApi = {
     const { data: passionRow, error } = await supabase
       .from('passions')
       .select(
-        'id, name, slug, description, category, visibility, join_type, cover_image_url, created_at'
+        'id, name, description, category, visibility, join_type, cover_image_url, created_at'
       )
       .eq('id', passionId)
       .single();

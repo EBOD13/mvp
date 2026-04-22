@@ -3,6 +3,7 @@ import {
   View,
   Text,
   FlatList,
+  Image,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
@@ -21,7 +22,7 @@ import PostCard from '../../components/cards/PostCard';
 import BottomNavBar from '../../components/layout/BottomNavBar';
 import FloatingActionButton from '../../components/layout/FloatingActionButton';
 import CommentSheet from '../../components/common/CommentSheet';
-import { Image } from 'react-native';
+import { Bell } from 'lucide-react-native';
 
 type NavProp = StackNavigationProp<RootStackParamList>;
 
@@ -160,7 +161,7 @@ const HomeFeedScreen: React.FC = () => {
 
         </View>
         <TouchableOpacity hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-          <Text style={{ fontSize: fontSizes.xl, color: colors.textSecondary }}>🔔</Text>
+          <Bell size={22} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 

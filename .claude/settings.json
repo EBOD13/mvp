@@ -3,7 +3,8 @@
     "allow": [
       "Bash(mvp/bin/pip install:*)",
       "Bash(npm install:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(pod install *)"
     ],
     "additionalDirectories": [
       "/Users/ebod/Projects/mvp/frontend/src"

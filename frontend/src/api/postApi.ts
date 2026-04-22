@@ -1,5 +1,24 @@
+import { supabase } from '../lib/supabase';
 import apiClient from '../lib/apiClient';
 import { PostResponse, PostCreate, PostUpdate } from '../types/feed';
+
+export async function uploadPostImage(base64: string, ext: string, userId: string): Promise<string> {
+  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+  const path = `${userId}/${Date.now()}.${ext}`;
+
+  // Decode base64 → ArrayBuffer via a data URI — works reliably in React Native
+  const dataUri = `data:${mimeType};base64,${base64}`;
+  const arrayBuffer = await fetch(dataUri).then(r => r.arrayBuffer());
+
+  const { error } = await supabase.storage
+    .from('post-media')
+    .upload(path, arrayBuffer, { contentType: mimeType, upsert: false });
+
+  if (error) throw new Error(`Storage upload failed: ${error.message}`);
+
+  const { data } = supabase.storage.from('post-media').getPublicUrl(path);
+  return data.publicUrl;
+}
 
 export const postApi = {
   createPost: (data: PostCreate) =>

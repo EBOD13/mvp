@@ -7,10 +7,20 @@ export interface UserProfile {
   bio: string | null;
   avatar_url: string | null;
   is_verified: boolean;
+  phriends_count: number;
   created_at: string;
 }
 
 export async function getMe() {
   const response = await apiClient.get<UserProfile>('/users/me');
+  return response.data;
+}
+
+export async function updateMe(data: {
+  display_name?: string;
+  bio?: string | null;
+  avatar_url?: string;
+}) {
+  const response = await apiClient.patch<UserProfile>('/users/me', data);
   return response.data;
 }

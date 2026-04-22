@@ -1,6 +1,6 @@
 import 'react-native-url-polyfill/auto';
 import React from 'react';
-import { StatusBar, useColorScheme } from 'react-native';
+import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -8,7 +8,7 @@ import { enableScreens } from 'react-native-screens';
 
 import { AuthProvider } from './src/context/AuthContext';
 import { useAuthContext } from './src/context/AuthContext';
-import { ThemeProvider } from './src/context/ThemeContext';
+import { ThemeProvider, useThemeContext } from './src/context/ThemeContext';
 import { RootStackParamList } from './src/navigation/types';
 import { LoadingSpinner } from './src/components/common/LoadingSpinner';
 
@@ -20,13 +20,11 @@ import SignUpScreen  from './src/screens/auth/SignUpScreen';
 import HomeFeedScreen      from './src/screens/feed/HomeFeedScreen';
 import CreatePostScreen    from './src/screens/feed/CreatePostScreen';
 import ProfileScreen       from './src/screens/profile/ProfileScreen';
-import EditProfileScreen   from './src/screens/stub/EditProfileScreen';
+import EditProfileScreen   from './src/screens/profile/EditProfileScreen';
 import CreatePassionScreen from './src/screens/stub/CreatePassionScreen';
 import OtherUserScreen     from './src/screens/stub/OtherUserScreen';
 import PassionsListScreen  from './src/screens/passions/PassionsListScreen';
 import SettingsScreen      from './src/screens/settings/SettingsScreen';
-import DiscoverScreen      from './src/screens/stub/DiscoverScreen';
-import PassionDetailScreen from './src/screens/stub/PassionDetailScreen';
 import DiscoverScreen      from './src/screens/discover/DiscoverScreen';
 import PassionDetailScreen from './src/screens/passions/PassionDetailScreen';
 import PhriendsListScreen  from './src/screens/stub/PhriendsListScreen';
@@ -36,8 +34,9 @@ enableScreens();
 const Stack = createStackNavigator<RootStackParamList>();
 
 function AppNavigator() {
-  const { session, isLoading } = useAuthContext();
-  const isDarkMode = useColorScheme() === 'dark';
+  const { accessToken: session, isLoading } = useAuthContext();
+  const { themePreference } = useThemeContext();
+  const isDarkMode = themePreference === 'dark';
 
   if (isLoading) {
     return <LoadingSpinner fullScreen />;

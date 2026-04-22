@@ -3,6 +3,7 @@ import { getToken, setToken, clearToken } from '../lib/secureStorage';
 import * as authApi from '../api/authApi';
 import { getMe } from '../api/userApi';
 import apiClient from '../lib/apiClient';
+import { supabase } from '../lib/supabase';
 
 interface AuthContextValue {
   userId: string | null;
@@ -86,6 +87,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await setToken(response.access_token);
     setAccessToken(response.access_token);
     setUserId(response.user_id);
+    await supabase.auth.setSession({
+      access_token: response.access_token,
+      refresh_token: response.refresh_token,
+    });
   }
 
   async function signup(email: string, password: string, username: string, displayName: string) {
@@ -98,6 +103,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await setToken(response.access_token);
     setAccessToken(response.access_token);
     setUserId(response.user_id);
+    await supabase.auth.setSession({
+      access_token: response.access_token,
+      refresh_token: response.refresh_token,
+    });
   }
 
   async function logout() {

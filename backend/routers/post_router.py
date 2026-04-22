@@ -12,7 +12,7 @@ NO business logic here. NO database calls here.
 from fastapi import APIRouter, Depends
 from typing import Literal
 from uuid import UUID
-from schemas.post_schema import PostCreate, PostUpdate, PostResponse
+from schemas.post_schema import PostCreate, PostUpdate, PostResponse, CommentCreate, CommentResponse
 from services import post_service
 from lib.auth import get_current_user
 
@@ -85,3 +85,24 @@ async def save_post(post_id: UUID, current_user=Depends(get_current_user)):
 async def unsave_post(post_id: UUID, current_user=Depends(get_current_user)):
     """Remove a bookmark."""
     await post_service.unsave_post(post_id, current_user.id)
+
+
+# ── Comments ─────────────────────────────────
+@router.get("/{post_id}/comments", response_model=list[CommentResponse])
+async def get_comments(post_id: UUID, current_user=Depends(get_current_user)):
+    return await post_service.get_comments(post_id, current_user.id)
+
+
+@router.post("/{post_id}/comments", response_model=CommentResponse)
+async def create_comment(post_id: UUID, data: CommentCreate, current_user=Depends(get_current_user)):
+    return await post_service.create_comment(post_id, current_user.id, data)
+
+
+@router.delete("/{post_id}/comments/{comment_id}", status_code=204)
+async def delete_comment(post_id: UUID, comment_id: UUID, current_user=Depends(get_current_user)):
+    await post_service.delete_comment(comment_id, current_user.id)
+
+
+@router.post("/{post_id}/comments/{comment_id}/like", status_code=204)
+async def like_comment(post_id: UUID, comment_id: UUID, current_user=Depends(get_current_user)):
+    await post_service.like_comment(comment_id, current_user.id)

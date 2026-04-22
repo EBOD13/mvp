@@ -1,8 +1,9 @@
+from typing import Optional
 from lib.supabase_client import supabase
 from schemas.passion_schema import PassionListItem
 
 
-def _normalize_role(role: str | None) -> str:
+def _normalize_role(role: Optional[str]) -> str:
     value = (role or "member").lower()
     if value in {"member", "moderator", "admin", "organizer"}:
         return value
