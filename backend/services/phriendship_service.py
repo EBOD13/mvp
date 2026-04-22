@@ -16,13 +16,25 @@ async def send_request(requester_id: UUID, addressee_id: UUID) -> PhriendRequest
             f"and(requester_id.eq.{addressee_id},addressee_id.eq.{requester_id})"
         ).execute()
     )
-    # Check no existing pending/accepted relationship — raise DuplicateError if so
+
     if existing.data:
-        for row in existing.data:
-            if row["status"] in ["pending", "accepted"]:
-                raise DuplicateError("A phriendship or pending request already exists")
-    # Insert into phriendships with status='pending'
-    row = (
+        row = existing.data[0]
+        # Check no existing pending/accepted relationship — raise DuplicateError if so
+        if row["status"] in ["pending", "accepted"]:
+            raise DuplicateError("A phriendship or pending request already exists")
+        # If old request was declined, reuse the same row
+        if row["status"] == "declined":
+            updated = (
+                supabase.table("phriendships")
+                .update({
+                    "requester_id": str(requester_id),
+                    "addressee_id": str(addressee_id),
+                    "status": "pending",
+                }).eq("id", row["id"]).execute()
+            )
+            return PhriendRequestResponse(**updated.data[0])
+    # Insert into phriendships with status='pending' if no row exists
+    created = (
         supabase.table("phriendships")
         .insert({
             "requester_id": str(requester_id),
@@ -31,7 +43,7 @@ async def send_request(requester_id: UUID, addressee_id: UUID) -> PhriendRequest
         }).execute()
     )
     # Return PhriendRequestResponse
-    return PhriendRequestResponse(**row.data[0])
+    return PhriendRequestResponse(**created.data[0])
 
 async def accept_request(request_id: UUID, current_user_id: UUID) -> PhriendRequestResponse:
     # Fetch phriend request
@@ -100,7 +112,7 @@ async def get_phriends(user_id: UUID) -> list[PhriendResponse]:
         supabase.table("phriendships")
         .select("*")
         .eq("status", "accepted")
-        .or_(f"(requester_id.eq.{user_id},addressee_id.eq.{user_id})")
+        .or_(f"requester_id.eq.{user_id},addressee_id.eq.{user_id}")
         .execute()
     )
     # Return all accepted phriends with their public profile fields
@@ -162,9 +174,11 @@ async def get_phriendship_status(current_user_id: UUID, other_user_id: UUID) -> 
 
     if row["status"] == "accepted":
         return "accepted"
+    
     if row["status"] == "pending":
         if row["requester_id"] == str(current_user_id):
             return "pending_sent"
         else:
             return "pending_received"
+        
     return "none"
