@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth_router, user_router
+
+from routers import auth_router, user_router, event_router
 from routers.post_router import router as post_router
 from routers.passion_router import router as passion_router
 
@@ -18,3 +19,5 @@ app.include_router(auth_router.router)
 app.include_router(user_router.router)
 app.include_router(post_router)
 app.include_router(passion_router)
+app.include_router(event_router.router)
+app.include_router(post_router)

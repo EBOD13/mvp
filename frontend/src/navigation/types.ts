@@ -15,4 +15,9 @@ export type RootStackParamList = {
   OtherUserScreen: { userId: string };
   CreatePostScreen: { post?: PostResponse } | undefined;
   CreatePassionScreen: undefined;
+  // Phase 2 additions
+  PassionsListScreen: undefined;
+  PassionDetailScreen: { passionId: string };
+  PhriendsListScreen: undefined;
+  SettingsScreen: undefined;
 };

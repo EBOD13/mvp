@@ -24,6 +24,24 @@ const PassionsListScreen: React.FC = () => {
   const requestedUserId = route.params?.userId;
   const requestedUsername = route.params?.username;
   const screenTitle = route.params?.title ?? 'My Passions';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../navigation/types';
+import apiClient from '../../lib/apiClient';
+import { EmptyState } from '../../components/common/EmptyState';
+
+type Navigation = StackNavigationProp<RootStackParamList, 'PassionsListScreen'>;
+
+interface PassionListItem {
+  id: string;
+  name: string;
+  member_count: number;
+  category: string | null;
+  my_role: 'member' | 'admin' | 'organizer';
+}
+
+const PassionsListScreen: React.FC = () => {
+  const navigation = useNavigation<Navigation>();
 
   const [items, setItems] = useState<PassionListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,11 +54,13 @@ const PassionsListScreen: React.FC = () => {
         : requestedUsername
           ? await passionApi.getPassionsByUsername(requestedUsername)
         : await passionApi.getMyPassions();
+      const response = await apiClient.get<PassionListItem[]>('/passions/me');
       setItems(Array.isArray(response.data) ? response.data : []);
     } catch {
       setItems([]);
     }
   }, [requestedUserId, requestedUsername]);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -76,6 +96,8 @@ const PassionsListScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top']}>
       <View
         style={{
           flexDirection: 'row',
@@ -84,6 +106,10 @@ const PassionsListScreen: React.FC = () => {
           paddingVertical: spacing['3'],
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: '#E5E7EB',
         }}
       >
         <Pressable
@@ -94,11 +120,17 @@ const PassionsListScreen: React.FC = () => {
           <Text style={[textVariants.h3 as any, { color: colors.textPrimary }]}>←</Text>
         </Pressable>
         <Text style={[textVariants.h3 as any, { color: colors.textPrimary }]}>{screenTitle}</Text>
+          style={{ marginRight: 12 }}
+        >
+          <Text style={{ fontSize: 22, color: '#111827' }}>←</Text>
+        </Pressable>
+        <Text style={{ fontSize: 17, fontWeight: '600', color: '#111827' }}>My Passions</Text>
       </View>
 
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color="#7C3AED" />
         </View>
       ) : (
         <FlatList
@@ -108,6 +140,7 @@ const PassionsListScreen: React.FC = () => {
           refreshing={refreshing}
           contentContainerStyle={{
             padding: spacing['4'],
+            padding: 16,
             flexGrow: items.length === 0 ? 1 : 0,
           }}
           ListEmptyComponent={
@@ -150,6 +183,22 @@ const PassionsListScreen: React.FC = () => {
                   {item.is_favorite ? '★' : '☆'}
                 </Text>
               </Pressable>
+              onPress={() => navigation.navigate('PassionDetailScreen', { passionId: item.id })}
+              style={{
+                backgroundColor: '#F9FAFB',
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                borderRadius: 8,
+                padding: 16,
+                marginBottom: 12,
+              }}
+            >
+              <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
+                {item.name}
+              </Text>
+              <Text style={{ fontSize: 13, color: '#6B7280' }}>
+                {item.member_count} members · {item.category ?? 'General'} · {item.my_role}
+              </Text>
             </Pressable>
           )}
         />

@@ -27,6 +27,8 @@ import PassionsListScreen  from './src/screens/passions/PassionsListScreen';
 import SettingsScreen      from './src/screens/settings/SettingsScreen';
 import DiscoverScreen      from './src/screens/stub/DiscoverScreen';
 import PassionDetailScreen from './src/screens/stub/PassionDetailScreen';
+import DiscoverScreen      from './src/screens/discover/DiscoverScreen';
+import PassionDetailScreen from './src/screens/passions/PassionDetailScreen';
 import PhriendsListScreen  from './src/screens/stub/PhriendsListScreen';
 
 enableScreens();
@@ -34,7 +36,7 @@ enableScreens();
 const Stack = createStackNavigator<RootStackParamList>();
 
 function AppNavigator() {
-  const { accessToken, isLoading } = useAuthContext();
+  const { session, isLoading } = useAuthContext();
   const isDarkMode = useColorScheme() === 'dark';
 
   if (isLoading) {
@@ -50,7 +52,7 @@ function AppNavigator() {
       />
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {accessToken ? (
+          {session ? (
             // ── Authenticated stack ──────────────────────────────────────
             <>
               <Stack.Screen name="HomeFeedScreen"      component={HomeFeedScreen} />
