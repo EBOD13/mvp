@@ -1,23 +1,23 @@
 export const palette = {
-  // Brand
-  primary:        '#E63244',
-  primaryDark:    '#B8253A',
-  primaryLight:   '#FF6075',
-  primarySubtle:  '#FDE8EB',
+  // Brand — passion fruit purple
+  primary:        '#7C1F88',
+  primaryDark:    '#571260',
+  primaryLight:   '#A84DC0',
+  primarySubtle:  '#F5EAF8',
 
-  // Neutrals
+  // Neutrals — slightly warm grey scale
   white:          '#FFFFFF',
-  black:          '#000000',
-  grey50:         '#F9FAFB',
-  grey100:        '#F3F4F6',
-  grey200:        '#E5E7EB',
-  grey300:        '#D1D5DB',
-  grey400:        '#9CA3AF',
-  grey500:        '#6B7280',
-  grey600:        '#4B5563',
-  grey700:        '#374151',
-  grey800:        '#1F2937',
-  grey900:        '#111827',
+  black:          '#0A0A0A',
+  grey50:         '#FAF9FB',
+  grey100:        '#F4F2F6',
+  grey200:        '#E8E4ED',
+  grey300:        '#CFC8D8',
+  grey400:        '#9E94AA',
+  grey500:        '#6E6478',
+  grey600:        '#4E4558',
+  grey700:        '#342D3C',
+  grey800:        '#201A28',
+  grey900:        '#120D18',
 
   // Semantic
   success:        '#22C55E',
@@ -29,7 +29,6 @@ export const palette = {
   info:           '#3B82F6',
   infoSubtle:     '#DBEAFE',
 } as const;
-
 export const lightColors = {
   background:         palette.white,
   surface:            palette.grey50,
@@ -55,7 +54,9 @@ export const lightColors = {
   warningSubtle:      palette.warningSubtle,
 } as const;
 
-export const darkColors: typeof lightColors = {
+export type Colors = { readonly [K in keyof typeof lightColors]: string };
+
+export const darkColors: Colors = {
   background:         palette.grey900,
   surface:            palette.grey800,
   surfaceElevated:    palette.grey700,
@@ -69,8 +70,8 @@ export const darkColors: typeof lightColors = {
 
   primary:            palette.primaryLight,
   primaryDark:        palette.primary,
-  primaryLight:       '#FF8A9A',
-  primarySubtle:      '#3D0A12',
+  primaryLight:       '#C278D6',
+  primarySubtle:      '#2A0D30',
 
   success:            palette.success,
   successSubtle:      '#14532D',
@@ -79,5 +80,3 @@ export const darkColors: typeof lightColors = {
   warning:            palette.warning,
   warningSubtle:      '#78350F',
 } as const;
-
-export type Colors = typeof lightColors;

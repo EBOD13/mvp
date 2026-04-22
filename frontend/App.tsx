@@ -25,8 +25,8 @@ import CreatePassionScreen from './src/screens/stub/CreatePassionScreen';
 import OtherUserScreen     from './src/screens/stub/OtherUserScreen';
 import PassionsListScreen  from './src/screens/passions/PassionsListScreen';
 import SettingsScreen      from './src/screens/settings/SettingsScreen';
-import DiscoverScreen      from './src/screens/stub/DiscoverScreen';
-import PassionDetailScreen from './src/screens/stub/PassionDetailScreen';
+import DiscoverScreen      from './src/screens/discover/DiscoverScreen';
+import PassionDetailScreen from './src/screens/passions/PassionDetailScreen';
 import PhriendsListScreen  from './src/screens/stub/PhriendsListScreen';
 
 enableScreens();
