@@ -345,7 +345,6 @@ async def create_comment(post_id: UUID, user_id: UUID, data: CommentCreate) -> C
             "author_id": str(user_id),
             "content": data.content,
         })
-        .select()
         .execute()
     )
     supabase.rpc("increment_field", {

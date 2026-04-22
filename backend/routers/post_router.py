@@ -40,54 +40,7 @@ async def get_feed(
     return await post_service.get_feed(current_user.id, filter, offset, limit)
 
 
-# ── Read (Single Post) ──────────────────────
-@router.get("/{post_id}", response_model=PostResponse)
-async def get_post(post_id: UUID, current_user=Depends(get_current_user)):
-    """Get a single post by ID. Includes is_liked and is_saved for the current user."""
-    return await post_service.get_post(post_id, current_user.id)
-
-
-# ── Update ───────────────────────────────────
-@router.patch("/{post_id}", response_model=PostResponse)
-async def update_post(post_id: UUID, data: PostUpdate, current_user=Depends(get_current_user)):
-    """Edit a post. Only the author can do this."""
-    return await post_service.update_post(post_id, current_user.id, data)
-
-
-# ── Delete ───────────────────────────────────
-@router.delete("/{post_id}", status_code=204)
-async def delete_post(post_id: UUID, current_user=Depends(get_current_user)):
-    """Delete a post. Only the author can do this. Returns no content (204)."""
-    await post_service.delete_post(post_id, current_user.id)
-
-
-# ── Like / Unlike ────────────────────────────
-@router.post("/{post_id}/like", status_code=204)
-async def like_post(post_id: UUID, current_user=Depends(get_current_user)):
-    """Like a post. Idempotent — liking twice won't crash, but the DB will reject the duplicate."""
-    await post_service.like_post(post_id, current_user.id)
-
-
-@router.delete("/{post_id}/like", status_code=204)
-async def unlike_post(post_id: UUID, current_user=Depends(get_current_user)):
-    """Remove a like from a post."""
-    await post_service.unlike_post(post_id, current_user.id)
-
-
-# ── Save / Unsave (Bookmarks) ───────────────
-@router.post("/{post_id}/save", status_code=204)
-async def save_post(post_id: UUID, current_user=Depends(get_current_user)):
-    """Bookmark a post for later."""
-    await post_service.save_post(post_id, current_user.id)
-
-
-@router.delete("/{post_id}/save", status_code=204)
-async def unsave_post(post_id: UUID, current_user=Depends(get_current_user)):
-    """Remove a bookmark."""
-    await post_service.unsave_post(post_id, current_user.id)
-
-
-# ── Comments ─────────────────────────────────
+# ── Comments (registered before /{post_id} wildcard) ────────────────────────
 @router.get("/{post_id}/comments", response_model=list[CommentResponse])
 async def get_comments(post_id: UUID, current_user=Depends(get_current_user)):
     return await post_service.get_comments(post_id, current_user.id)
@@ -106,3 +59,43 @@ async def delete_comment(post_id: UUID, comment_id: UUID, current_user=Depends(g
 @router.post("/{post_id}/comments/{comment_id}/like", status_code=204)
 async def like_comment(post_id: UUID, comment_id: UUID, current_user=Depends(get_current_user)):
     await post_service.like_comment(comment_id, current_user.id)
+
+
+# ── Like / Unlike ────────────────────────────
+@router.post("/{post_id}/like", status_code=204)
+async def like_post(post_id: UUID, current_user=Depends(get_current_user)):
+    await post_service.like_post(post_id, current_user.id)
+
+
+@router.delete("/{post_id}/like", status_code=204)
+async def unlike_post(post_id: UUID, current_user=Depends(get_current_user)):
+    await post_service.unlike_post(post_id, current_user.id)
+
+
+# ── Save / Unsave (Bookmarks) ───────────────
+@router.post("/{post_id}/save", status_code=204)
+async def save_post(post_id: UUID, current_user=Depends(get_current_user)):
+    await post_service.save_post(post_id, current_user.id)
+
+
+@router.delete("/{post_id}/save", status_code=204)
+async def unsave_post(post_id: UUID, current_user=Depends(get_current_user)):
+    await post_service.unsave_post(post_id, current_user.id)
+
+
+# ── Read (Single Post) ──────────────────────
+@router.get("/{post_id}", response_model=PostResponse)
+async def get_post(post_id: UUID, current_user=Depends(get_current_user)):
+    return await post_service.get_post(post_id, current_user.id)
+
+
+# ── Update ───────────────────────────────────
+@router.patch("/{post_id}", response_model=PostResponse)
+async def update_post(post_id: UUID, data: PostUpdate, current_user=Depends(get_current_user)):
+    return await post_service.update_post(post_id, current_user.id, data)
+
+
+# ── Delete ───────────────────────────────────
+@router.delete("/{post_id}", status_code=204)
+async def delete_post(post_id: UUID, current_user=Depends(get_current_user)):
+    await post_service.delete_post(post_id, current_user.id)

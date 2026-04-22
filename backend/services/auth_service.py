@@ -1,6 +1,6 @@
+from fastapi import HTTPException, status
 from lib.supabase_client import supabase
 from schemas.auth_schema import SignUpRequest, AuthResponse, LoginRequest
-# from lib.exceptions import DuplicateError, ForbiddenError
 
 async def sign_up(data: SignUpRequest) -> AuthResponse:
     # 1. Create user in Supabase Auth
@@ -34,16 +34,24 @@ async def login(data: LoginRequest) -> AuthResponse:
         email = data.identifier
     else:
         result = supabase.table("users").select("email").eq("username", data.identifier).single().execute()
+        if not result.data:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
         email = result.data["email"]
 
     # 2. Sign in with email + password
-    auth_response = supabase.auth.sign_in_with_password({
-        "email": email,
-        "password": data.password,
-    })
+    try:
+        auth_response = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": data.password,
+        })
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     session = auth_response.session
     user = auth_response.user
+
+    if not session or not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     # 3. Return AuthResponse
     return AuthResponse(
