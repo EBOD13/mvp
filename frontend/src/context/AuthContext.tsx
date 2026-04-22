@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getToken, setToken, clearToken } from '../lib/secureStorage';
 import * as authApi from '../api/authApi';
+import { getMe } from '../api/userApi';
 import apiClient from '../lib/apiClient';
 
 interface AuthContextValue {
@@ -36,12 +37,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []); // setAccessToken / setUserId are stable setState references
 
   useEffect(() => {
+    if (accessToken) {
+      apiClient.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+    } else {
+      delete apiClient.defaults.headers.common.Authorization;
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
     let mounted = true;
 
     async function restoreSession() {
       const token = await getToken();
       if (!mounted) return;
+
+      if (!token) {
+        setAccessToken(null);
+        setUserId(null);
+        setIsLoading(false);
+        return;
+      }
+
       setAccessToken(token);
+
+      try {
+        const me = await getMe();
+        if (!mounted) return;
+        setUserId(me.id);
+      } catch {
+        await clearToken();
+        if (!mounted) return;
+        setAccessToken(null);
+        setUserId(null);
+      }
+
       setIsLoading(false);
     }
 

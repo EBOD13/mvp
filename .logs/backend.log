@@ -1,0 +1,403 @@
+INFO:     Will watch for changes in these directories: ['/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [110604] using StatReload
+INFO:     Started server process [110610]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:43662 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33362 - "GET /posts/feed?filter=phriends&offset=0&limit=20 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41788 - "GET /passions/me HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:45766 - "GET /passions/me HTTP/1.1" 404 Not Found
+WARNING:  StatReload detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [110610]
+INFO:     Started server process [124045]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:54668 - "GET /passions/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:40774 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40774 - "GET /posts/feed?filter=phriends&offset=0&limit=20 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54762 - "GET /passions/me HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 314, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/routers/passion_router.py", line 12, in get_my_passions
+    return await passion_service.get_my_passions(str(current_user.id))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/services/passion_service.py", line 8, in get_my_passions
+    ).eq("user_id", user_id).execute()
+                             ^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/postgrest/_sync/request_builder.py", line 53, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': 'column passion_members.is_favorite does not exist', 'code': '42703', 'hint': None, 'details': None}
+INFO:     127.0.0.1:47736 - "GET /passions/me HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 314, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/routers/passion_router.py", line 12, in get_my_passions
+    return await passion_service.get_my_passions(str(current_user.id))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/services/passion_service.py", line 8, in get_my_passions
+    ).eq("user_id", user_id).execute()
+                             ^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/postgrest/_sync/request_builder.py", line 53, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': 'column passion_members.is_favorite does not exist', 'code': '42703', 'hint': None, 'details': None}
+INFO:     127.0.0.1:47740 - "GET /passions/me HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 314, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/routers/passion_router.py", line 12, in get_my_passions
+    return await passion_service.get_my_passions(str(current_user.id))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/services/passion_service.py", line 8, in get_my_passions
+    ).eq("user_id", user_id).execute()
+                             ^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/postgrest/_sync/request_builder.py", line 53, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': 'column passion_members.is_favorite does not exist', 'code': '42703', 'hint': None, 'details': None}
+WARNING:  StatReload detected changes in 'services/passion_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [124045]
+INFO:     Started server process [126385]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:36790 - "GET /passions/me HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 314, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/routers/passion_router.py", line 12, in get_my_passions
+    return await passion_service.get_my_passions(str(current_user.id))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/services/passion_service.py", line 8, in get_my_passions
+    ).eq("user_id", user_id).execute()
+                             ^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/postgrest/_sync/request_builder.py", line 53, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': "Could not find the table 'public.user_members' in the schema cache", 'code': 'PGRST205', 'hint': "Perhaps you meant the table 'public.passion_members'", 'details': None}
+INFO:     127.0.0.1:36792 - "GET /passions/me HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 314, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/routers/passion_router.py", line 12, in get_my_passions
+    return await passion_service.get_my_passions(str(current_user.id))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/services/passion_service.py", line 8, in get_my_passions
+    ).eq("user_id", user_id).execute()
+                             ^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/postgrest/_sync/request_builder.py", line 53, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': "Could not find the table 'public.user_members' in the schema cache", 'code': 'PGRST205', 'hint': "Perhaps you meant the table 'public.passion_members'", 'details': None}
+INFO:     127.0.0.1:58834 - "GET /passions/me HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 314, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/routers/passion_router.py", line 12, in get_my_passions
+    return await passion_service.get_my_passions(str(current_user.id))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/services/passion_service.py", line 8, in get_my_passions
+    ).eq("user_id", user_id).execute()
+                             ^^^^^^^^^
+  File "/mnt/c/Users/maril/OneDrive/Documents/GitHub/mvp/backend/.venv/lib/python3.12/site-packages/postgrest/_sync/request_builder.py", line 53, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': "Could not find the table 'public.user_members' in the schema cache", 'code': 'PGRST205', 'hint': "Perhaps you meant the table 'public.passion_members'", 'details': None}
+WARNING:  StatReload detected changes in 'services/passion_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [126385]
+INFO:     Started server process [127002]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'services/passion_service.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [127002]
+INFO:     Started server process [133255]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'routers/passion_router.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [133255]
+INFO:     Started server process [135052]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'routers/post_router.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [135052]
+INFO:     Started server process [135707]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

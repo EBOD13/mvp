@@ -10,6 +10,7 @@ NO business logic here. NO database calls here.
 """
 
 from fastapi import APIRouter, Depends
+from typing import Literal
 from uuid import UUID
 from schemas.post_schema import PostCreate, PostUpdate, PostResponse
 from services import post_service
@@ -29,9 +30,14 @@ async def create_post(data: PostCreate, current_user=Depends(get_current_user)):
 
 # ── Read (Feed) ──────────────────────────────
 @router.get("/feed", response_model=list[PostResponse])
-async def get_feed(offset: int = 0, limit: int = 20, current_user=Depends(get_current_user)):
+async def get_feed(
+    filter: Literal["phriends", "passions"] = "phriends",
+    offset: int = 0,
+    limit: int = 20,
+    current_user=Depends(get_current_user),
+):
     """Get a paginated feed of posts, newest first."""
-    return await post_service.get_feed(current_user.id, offset, limit)
+    return await post_service.get_feed(current_user.id, filter, offset, limit)
 
 
 # ── Read (Single Post) ──────────────────────

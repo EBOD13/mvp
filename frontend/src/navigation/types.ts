@@ -8,7 +8,7 @@ export type RootStackParamList = {
   MessagesScreen: undefined;
   ProfileScreen: undefined;
   EditProfileScreen: undefined;
-  PassionsListScreen: undefined;
+  PassionsListScreen: { userId?: string; username?: string; title?: string } | undefined;
   SettingsScreen: undefined;
   PhriendsListScreen: undefined;
   PassionDetailScreen: { passionId: string };

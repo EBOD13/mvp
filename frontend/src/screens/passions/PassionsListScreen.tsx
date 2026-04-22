@@ -7,26 +7,23 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
-import apiClient from '../../lib/apiClient';
 import { EmptyState } from '../../components/common/EmptyState';
+import { passionApi, PassionListItem } from '../../api/passionApi';
 
 type Navigation = StackNavigationProp<RootStackParamList, 'PassionsListScreen'>;
-
-interface PassionListItem {
-  id: string;
-  name: string;
-  member_count: number;
-  category: string | null;
-  my_role: 'member' | 'admin' | 'organizer';
-}
+type PassionsRoute = RouteProp<RootStackParamList, 'PassionsListScreen'>;
 
 const PassionsListScreen: React.FC = () => {
   const navigation = useNavigation<Navigation>();
+  const route = useRoute<PassionsRoute>();
   const { colors, spacing, textVariants, radii } = useTheme();
+  const requestedUserId = route.params?.userId;
+  const requestedUsername = route.params?.username;
+  const screenTitle = route.params?.title ?? 'My Passions';
 
   const [items, setItems] = useState<PassionListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,12 +31,16 @@ const PassionsListScreen: React.FC = () => {
 
   const load = useCallback(async () => {
     try {
-      const response = await apiClient.get<PassionListItem[]>('/passions/me');
+      const response = requestedUserId
+        ? await passionApi.getUserPassions(requestedUserId)
+        : requestedUsername
+          ? await passionApi.getPassionsByUsername(requestedUsername)
+        : await passionApi.getMyPassions();
       setItems(Array.isArray(response.data) ? response.data : []);
     } catch {
       setItems([]);
     }
-  }, []);
+  }, [requestedUserId, requestedUsername]);
 
   useEffect(() => {
     (async () => {
@@ -53,6 +54,25 @@ const PassionsListScreen: React.FC = () => {
     await load();
     setRefreshing(false);
   }, [load]);
+
+  const toggleFavorite = useCallback(async (item: PassionListItem) => {
+    // Optimistic update
+    setItems(prev =>
+      prev.map(p => p.id === item.id ? { ...p, is_favorite: !p.is_favorite } : p)
+    );
+    try {
+      if (item.is_favorite) {
+        await passionApi.removeFavorite(item.id);
+      } else {
+        await passionApi.addFavorite(item.id);
+      }
+    } catch {
+      // Revert on failure
+      setItems(prev =>
+        prev.map(p => p.id === item.id ? { ...p, is_favorite: item.is_favorite } : p)
+      );
+    }
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
@@ -73,7 +93,7 @@ const PassionsListScreen: React.FC = () => {
         >
           <Text style={[textVariants.h3 as any, { color: colors.textPrimary }]}>←</Text>
         </Pressable>
-        <Text style={[textVariants.h3 as any, { color: colors.textPrimary }]}>My Passions</Text>
+        <Text style={[textVariants.h3 as any, { color: colors.textPrimary }]}>{screenTitle}</Text>
       </View>
 
       {loading ? (
@@ -100,9 +120,7 @@ const PassionsListScreen: React.FC = () => {
           renderItem={({ item }) => (
             <Pressable
               onPress={() =>
-                navigation.navigate('PassionDetailScreen', {
-                  passionId: item.id,
-                })
+                navigation.navigate('PassionDetailScreen', { passionId: item.id })
               }
               style={{
                 backgroundColor: colors.surface,
@@ -111,14 +129,27 @@ const PassionsListScreen: React.FC = () => {
                 borderRadius: radii.md,
                 padding: spacing['4'],
                 marginBottom: spacing['3'],
+                flexDirection: 'row',
+                alignItems: 'center',
               }}
             >
-              <Text style={[textVariants.h4 as any, { color: colors.textPrimary, marginBottom: spacing['1'] }]}>
-                {item.name}
-              </Text>
-              <Text style={[textVariants.body as any, { color: colors.textSecondary }]}> 
-                {item.member_count} members · {item.category ?? 'General'} · {item.my_role}
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[textVariants.h4 as any, { color: colors.textPrimary, marginBottom: spacing['1'] }]}>
+                  {item.name}
+                </Text>
+                <Text style={[textVariants.body as any, { color: colors.textSecondary }]}>
+                  {item.member_count} members · {item.category ?? 'General'} · {item.my_role}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => toggleFavorite(item)}
+                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                style={{ paddingLeft: spacing['3'] }}
+              >
+                <Text style={{ fontSize: 22, color: item.is_favorite ? colors.primary : colors.textSecondary }}>
+                  {item.is_favorite ? '★' : '☆'}
+                </Text>
+              </Pressable>
             </Pressable>
           )}
         />

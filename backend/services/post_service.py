@@ -9,9 +9,57 @@ Business logic for posts. Every function here:
 """
 
 from uuid import UUID
+from typing import Literal
 from lib.supabase_client import supabase
 from lib.exceptions import NotFoundError, ForbiddenError
 from schemas.post_schema import PostCreate, PostUpdate, PostResponse
+
+
+async def _hydrate_post(post: dict, user_id: UUID) -> PostResponse:
+    author = (
+        supabase.table("users")
+        .select("display_name, username")
+        .eq("id", post["author_id"])
+        .single()
+        .execute()
+    )
+
+    passion_name = None
+    if post.get("passion_id"):
+        passion = (
+            supabase.table("passions")
+            .select("name")
+            .eq("id", post["passion_id"])
+            .single()
+            .execute()
+        )
+        passion_name = passion.data.get("name") if passion.data else None
+
+    like_check = (
+        supabase.table("post_likes")
+        .select("user_id")
+        .eq("post_id", post["id"])
+        .eq("user_id", str(user_id))
+        .execute()
+    )
+    save_check = (
+        supabase.table("post_saves")
+        .select("user_id")
+        .eq("post_id", post["id"])
+        .eq("user_id", str(user_id))
+        .execute()
+    )
+
+    post["author_name"] = author.data.get("display_name") if author.data else "Unknown"
+    post["author_username"] = f"@{author.data.get('username')}" if author.data else "@unknown"
+    post["passion_name"] = passion_name
+    post["visibility"] = post.get("visibility") or "public"
+    post["comments_enabled"] = post.get("comments_enabled", True)
+    post["media_urls"] = post.get("media_urls") or []
+    post["is_liked"] = len(like_check.data) > 0
+    post["is_saved"] = len(save_check.data) > 0
+
+    return PostResponse(**post)
 
 
 # ──────────────────────────────────────────────
@@ -30,14 +78,12 @@ async def create_post(user_id: UUID, data: PostCreate) -> PostResponse:
             "content": data.content,
             "passion_id": str(data.passion_id) if data.passion_id else None,
             "media_urls": data.media_urls or [],
+            "visibility": data.visibility,
+            "comments_enabled": data.comments_enabled,
         })
         .execute()
     )
-    post = row.data[0]
-    # New post — nobody has liked or saved it yet
-    post["is_liked"] = False
-    post["is_saved"] = False
-    return PostResponse(**post)
+    return await _hydrate_post(row.data[0], user_id)
 
 
 async def get_post(post_id: UUID, requesting_user_id: UUID) -> PostResponse:
@@ -55,67 +101,75 @@ async def get_post(post_id: UUID, requesting_user_id: UUID) -> PostResponse:
     if not row.data:
         raise NotFoundError("Post not found")
 
-    post = row.data[0]
-
-    # Check if this user liked the post
-    like_check = (
-        supabase.table("post_likes")
-        .select("user_id")
-        .eq("post_id", str(post_id))
-        .eq("user_id", str(requesting_user_id))
-        .execute()
-    )
-    post["is_liked"] = len(like_check.data) > 0
-
-    # Check if this user saved the post
-    save_check = (
-        supabase.table("post_saves")
-        .select("user_id")
-        .eq("post_id", str(post_id))
-        .eq("user_id", str(requesting_user_id))
-        .execute()
-    )
-    post["is_saved"] = len(save_check.data) > 0
-
-    return PostResponse(**post)
+    return await _hydrate_post(row.data[0], requesting_user_id)
 
 
-async def get_feed(user_id: UUID, offset: int = 0, limit: int = 20) -> list[PostResponse]:
+async def get_feed(
+    user_id: UUID,
+    filter: Literal["phriends", "passions"] = "phriends",
+    offset: int = 0,
+    limit: int = 20,
+) -> list[PostResponse]:
     """
     Return a paginated list of posts, newest first.
     For now this returns ALL posts (global feed).
     Later we'll add passion-based and phriends-only filtering.
     """
-    row = (
-        supabase.table("posts")
-        .select("*")
-        .order("created_at", desc=True)
-        .range(offset, offset + limit - 1)
-        .execute()
-    )
+    user_id_str = str(user_id)
 
-    posts = []
-    for post in row.data:
-        # Check like/save status for each post
-        like_check = (
-            supabase.table("post_likes")
-            .select("user_id")
-            .eq("post_id", post["id"])
-            .eq("user_id", str(user_id))
+    if filter == "passions":
+        passions = (
+            supabase.table("passion_members")
+            .select("passion_id")
+            .eq("user_id", user_id_str)
             .execute()
         )
-        save_check = (
-            supabase.table("post_saves")
-            .select("user_id")
-            .eq("post_id", post["id"])
-            .eq("user_id", str(user_id))
+        passion_ids = [row["passion_id"] for row in passions.data]
+        if not passion_ids:
+            return []
+
+        row = (
+            supabase.table("posts")
+            .select("*")
+            .in_("passion_id", passion_ids)
+            .order("created_at", desc=True)
+            .range(offset, offset + limit - 1)
             .execute()
         )
-        post["is_liked"] = len(like_check.data) > 0
-        post["is_saved"] = len(save_check.data) > 0
-        posts.append(PostResponse(**post))
+    else:
+        phriends = (
+            supabase.table("phriendships")
+            .select("requester_id, addressee_id")
+            .eq("status", "accepted")
+            .or_(f"requester_id.eq.{user_id_str},addressee_id.eq.{user_id_str}")
+            .execute()
+        )
 
-    return posts
+        author_ids = {user_id_str}
+        for p in phriends.data:
+            if p["requester_id"] == user_id_str:
+                author_ids.add(p["addressee_id"])
+            elif p["addressee_id"] == user_id_str:
+                author_ids.add(p["requester_id"])
+
+        row = (
+            supabase.table("posts")
+            .select("*")
+            .in_("author_id", list(author_ids))
+            .order("created_at", desc=True)
+            .range(offset, offset + limit - 1)
+            .execute()
+        )
+
+    visible_posts = [
+        post for post in row.data
+        if (post.get("visibility") or "public") == "public" or post["author_id"] == user_id_str
+    ]
+
+    hydrated: list[PostResponse] = []
+    for post in visible_posts:
+        hydrated.append(await _hydrate_post(post, user_id))
+    return hydrated
 
 
 async def update_post(post_id: UUID, user_id: UUID, data: PostUpdate) -> PostResponse:
@@ -146,10 +200,7 @@ async def update_post(post_id: UUID, user_id: UUID, data: PostUpdate) -> PostRes
         .execute()
     )
 
-    post = row.data[0]
-    post["is_liked"] = False
-    post["is_saved"] = False
-    return PostResponse(**post)
+    return await _hydrate_post(row.data[0], user_id)
 
 
 async def delete_post(post_id: UUID, user_id: UUID) -> None:

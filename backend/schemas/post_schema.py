@@ -19,21 +19,31 @@ class PostCreate(BaseModel):
     content: str
     passion_id: Optional[UUID] = None
     media_urls: Optional[List[str]] = []
+    visibility: str = "public"
+    comments_enabled: bool = True
 
 
 class PostUpdate(BaseModel):
     """Input model for editing a post. All fields optional — only send what changed."""
     content: Optional[str] = None
     media_urls: Optional[List[str]] = None
+    passion_id: Optional[UUID] = None
+    visibility: Optional[str] = None
+    comments_enabled: Optional[bool] = None
 
 
 class PostResponse(BaseModel):
     """Output model returned by the API. Includes everything the frontend needs to render a PostCard."""
     id: UUID
     author_id: UUID
+    author_name: str
+    author_username: str
     passion_id: Optional[UUID]
+    passion_name: Optional[str] = None
     content: str
     media_urls: List[str]
+    visibility: str = "public"
+    comments_enabled: bool = True
     like_count: int
     comment_count: int
     save_count: int
