@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Heart, Trash2, X, Send } from 'lucide-react-native';
 import { useTheme } from '../../theme';
 import { useComments } from '../../hooks/useComments';
 import { useAuth } from '../../hooks/useAuth';
@@ -78,9 +79,11 @@ const CommentRow: React.FC<CommentRowProps> = ({ comment, isAuthor, onLike, onDe
             style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['1'] }}
             activeOpacity={0.7}
           >
-            <Text style={{ fontSize: fontSizes.sm, color: comment.is_liked ? colors.primary : colors.textDisabled }}>
-              {comment.is_liked ? '♥' : '♡'}
-            </Text>
+            <Heart
+              size={14}
+              color={comment.is_liked ? colors.primary : colors.textDisabled}
+              fill={comment.is_liked ? colors.primary : 'transparent'}
+            />
             {comment.like_count > 0 && (
               <Text style={{ fontSize: fontSizes.xs, color: comment.is_liked ? colors.primary : colors.textDisabled }}>
                 {comment.like_count}
@@ -91,7 +94,7 @@ const CommentRow: React.FC<CommentRowProps> = ({ comment, isAuthor, onLike, onDe
           {/* Delete — only for comment author */}
           {isAuthor && (
             <TouchableOpacity onPress={onDelete} activeOpacity={0.7}>
-              <Text style={{ fontSize: fontSizes.sm, color: colors.textDisabled }}>🗑</Text>
+              <Trash2 size={14} color={colors.textDisabled} />
             </TouchableOpacity>
           )}
         </View>
@@ -184,7 +187,7 @@ const CommentSheet: React.FC<CommentSheetProps> = ({ postId, visible, onClose })
               Comments{comments.length > 0 ? ` (${comments.length})` : ''}
             </Text>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-              <Text style={{ fontSize: fontSizes.lg, color: colors.textDisabled }}>✕</Text>
+              <X size={20} color={colors.textDisabled} />
             </TouchableOpacity>
           </View>
 
@@ -273,12 +276,7 @@ const CommentSheet: React.FC<CommentSheetProps> = ({ postId, visible, onClose })
               {submitting ? (
                 <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <Text style={{
-                  color: inputText.trim() ? colors.textInverse : colors.textDisabled,
-                  fontSize: fontSizes.md,
-                }}>
-                  ▶
-                </Text>
+                <Send size={16} color={inputText.trim() ? colors.textInverse : colors.textDisabled} />
               )}
             </TouchableOpacity>
           </View>

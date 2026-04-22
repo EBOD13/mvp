@@ -1,33 +1,78 @@
 // src/components/cards/PassionCard.tsx
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ImageBackground,
+} from 'react-native';
+import { Users } from 'lucide-react-native';
 import { useTheme } from '../../theme';
 
-const passion = {
-  name: 'Urban Photography',
-  description:
-    'A space for photographers who find beauty in city streets, architecture, and everyday urban life.',
-  memberCount: 1240,
-  isJoined: false,
-  category: 'Creative Arts',
+export type PassionCardData = {
+  name: string;
+  description: string;
+  memberCount: number;
+  category: string;
+  isJoined?: boolean;
+  coverImageUrl?: string | null;
+  coverColor?: string;
+};
+
+type PassionCardProps = {
+  passion: PassionCardData;
+  onPress?: () => void;
+  onJoinPress?: () => void;
 };
 
 const formatMemberCount = (count: number): string =>
-  `${count.toLocaleString()} members`;
+  `${count.toLocaleString()} member${count === 1 ? '' : 's'}`;
 
-const PassionCard: React.FC = () => {
-  const { colors, spacing, fontSizes, fontWeights, lineHeights, radii, shadows } = useTheme();
+const PassionCard: React.FC<PassionCardProps> = ({
+  passion,
+  onPress,
+  onJoinPress,
+}) => {
+  const {
+    colors,
+    spacing,
+    fontSizes,
+    fontWeights,
+    lineHeights,
+    radii,
+    shadows,
+  } = useTheme();
 
   const s = {
+    pressable: {
+      flex: 1,
+    },
     card: {
+      flex: 1,
       backgroundColor: colors.surface,
       borderRadius: radii.lg,
-      marginHorizontal: spacing['4'],
-      marginVertical: spacing['2'],
-      padding: spacing['4'],
       borderWidth: 1,
       borderColor: colors.border,
+      overflow: 'hidden' as const,
       ...shadows.md,
+    },
+    banner: {
+      height: 86,
+      backgroundColor: passion.coverColor ?? colors.primarySubtle,
+    },
+    bannerImage: {
+      borderTopLeftRadius: radii.lg,
+      borderTopRightRadius: radii.lg,
+    },
+    bannerOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.10)',
+    },
+    content: {
+      paddingHorizontal: spacing['3'],
+      paddingTop: spacing['3'],
+      paddingBottom: spacing['3'],
+      minHeight: 150,
     },
     topRow: {
       flexDirection: 'row' as const,
@@ -38,57 +83,64 @@ const PassionCard: React.FC = () => {
     },
     passionName: {
       flex: 1,
-      fontSize: fontSizes.xl,
+      fontSize: fontSizes.lg,
       fontWeight: fontWeights.bold,
       color: colors.textPrimary,
-      lineHeight: fontSizes.xl * lineHeights.tight,
+      lineHeight: fontSizes.lg * lineHeights.tight,
+      marginRight: spacing['1'],
     },
     categoryBadge: {
       backgroundColor: colors.primarySubtle,
       borderRadius: radii.full,
-      paddingHorizontal: spacing['3'],
+      paddingHorizontal: spacing['2'],
       paddingVertical: spacing['1'],
       alignSelf: 'flex-start' as const,
+      maxWidth: 78,
     },
     categoryBadgeText: {
       fontSize: fontSizes.xs,
       fontWeight: fontWeights.semibold,
       color: colors.primary,
-      letterSpacing: 0.3,
     },
     description: {
-      fontSize: fontSizes.md,
+      fontSize: fontSizes.sm,
       fontWeight: fontWeights.regular,
       color: colors.textSecondary,
-      lineHeight: fontSizes.md * lineHeights.relaxed,
-      marginBottom: spacing['4'],
+      lineHeight: fontSizes.sm * lineHeights.relaxed,
+      marginBottom: spacing['3'],
+      minHeight: 44,
+    },
+    divider: {
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      marginBottom: spacing['3'],
     },
     footer: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       justifyContent: 'space-between' as const,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      paddingTop: spacing['3'],
+      gap: spacing['2'],
     },
     memberRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      gap: spacing['1'],
+      flex: 1,
+      minWidth: 0,
     },
-    memberIcon: {
-      fontSize: fontSizes.md,
-    },
+    memberIcon: {},
     memberCount: {
-      fontSize: fontSizes.sm,
+      flexShrink: 1,
+      fontSize: fontSizes.xs,
       fontWeight: fontWeights.medium,
       color: colors.textSecondary,
     },
     joinButton: {
       backgroundColor: colors.primary,
       borderRadius: radii.full,
-      paddingHorizontal: spacing['6'],
+      paddingHorizontal: spacing['4'],
       paddingVertical: spacing['2'],
+      minWidth: 72,
+      alignItems: 'center' as const,
     },
     joinButtonJoined: {
       backgroundColor: colors.surface,
@@ -99,7 +151,6 @@ const PassionCard: React.FC = () => {
       fontSize: fontSizes.sm,
       fontWeight: fontWeights.semibold,
       color: colors.textInverse,
-      letterSpacing: 0.3,
     },
     joinButtonTextJoined: {
       color: colors.textSecondary,
@@ -107,35 +158,70 @@ const PassionCard: React.FC = () => {
   };
 
   return (
-    <View style={s.card}>
-      <View style={s.topRow}>
-        <Text style={s.passionName}>{passion.name}</Text>
-        <View style={s.categoryBadge}>
-          <Text style={s.categoryBadgeText}>{passion.category}</Text>
-        </View>
-      </View>
-
-      <Text style={s.description} numberOfLines={2}>
-        {passion.description}
-      </Text>
-
-      <View style={s.footer}>
-        <View style={s.memberRow}>
-          <Text style={s.memberIcon}>👥</Text>
-          <Text style={s.memberCount}>{formatMemberCount(passion.memberCount)}</Text>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => {}}
-          style={[s.joinButton, passion.isJoined && s.joinButtonJoined]}
-          activeOpacity={0.75}
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.88}
+      style={s.pressable}
+      disabled={!onPress}
+    >
+      <View style={s.card}>
+        <ImageBackground
+          source={passion.coverImageUrl ? { uri: passion.coverImageUrl } : undefined}
+          style={s.banner}
+          imageStyle={s.bannerImage}
         >
-          <Text style={[s.joinButtonText, passion.isJoined && s.joinButtonTextJoined]}>
-            {passion.isJoined ? 'Joined' : 'Join'}
+          <View style={s.bannerOverlay} />
+        </ImageBackground>
+
+        <View style={s.content}>
+          <View style={s.topRow}>
+            <Text style={s.passionName} numberOfLines={2}>
+              {passion.name}
+            </Text>
+
+            <View style={s.categoryBadge}>
+              <Text style={s.categoryBadgeText} numberOfLines={1}>
+                {passion.category}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={s.description} numberOfLines={2}>
+            {passion.description}
           </Text>
-        </TouchableOpacity>
+
+          <View style={s.divider} />
+
+          <View style={s.footer}>
+            <View style={s.memberRow}>
+              <Users size={14} color={colors.textSecondary} style={{ marginRight: spacing['1'] }} />
+              <Text style={s.memberCount} numberOfLines={1}>
+                {formatMemberCount(passion.memberCount)}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={onJoinPress}
+              style={[
+                s.joinButton,
+                passion.isJoined && s.joinButtonJoined,
+              ]}
+              activeOpacity={0.75}
+              disabled={!onJoinPress}
+            >
+              <Text
+                style={[
+                  s.joinButtonText,
+                  passion.isJoined && s.joinButtonTextJoined,
+                ]}
+              >
+                {passion.isJoined ? 'Joined' : 'Join'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

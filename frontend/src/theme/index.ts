@@ -1,7 +1,7 @@
-import { useColorScheme } from 'react-native';
 import { lightColors, darkColors, Colors } from './colors';
 import { fontSizes, fontWeights, lineHeights, textVariants } from './typography';
 import { spacing, radii, shadows } from './spacing';
+import { useThemeContext } from '../context/ThemeContext';
 
 export const theme = {
   colors: lightColors,
@@ -14,13 +14,13 @@ export const theme = {
   shadows,
 } as const;
 
-export type Theme = typeof theme;
+export type Theme = Omit<typeof theme, 'colors'> & { colors: Colors };
 
-export function useTheme(): Theme & { colors: Colors } {
-  const scheme = useColorScheme();
+export function useTheme(): Theme {
+  const { themePreference } = useThemeContext();
   return {
     ...theme,
-    colors: scheme === 'dark' ? darkColors : lightColors,
+    colors: themePreference === 'dark' ? darkColors : lightColors,
   };
 }
 

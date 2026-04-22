@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,144 +6,106 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Image,
   Alert,
-  Switch,
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
+import { useAuth } from '../../hooks/useAuth';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
+import { Avatar } from '../../components/common/Avatar';
+import { getMe, updateMe } from '../../api/userApi';
+import { supabase } from '../../lib/supabase';
 
-/*
-TODO(EditProfileScreen) explicit checklist:
-- [x] Move all hardcoded style values to src/theme tokens.
-- [x] Replace scaffold TextInput/Button blocks with shared Input/Button components.
-- [x] Keep username as a controlled useState field.
-- [x] Added Links section: display existing links and an "+ ADD" action.
-- [x] Added Profile Song section with Change / Remove buttons (UI-only).
-- [x] Profile Picture section: thumbnail + Change / Remove buttons with real image picker.
-- [x] Added Private Profile toggle (UI-only state in this issue).
-- [x] Keep Save Changes as console.log only (no API call in this issue).
-- [x] Keep Cancel as navigation.goBack() with no save side effects.
-- [x] Validate keyboard behavior on iOS and Android with KeyboardAvoidingView.
-*/
-
-type ProfileRoutes = RootStackParamList & {
-  ProfileScreen: undefined;
-  EditProfileScreen: undefined;
-};
-
-type ProfileNavigationProp = StackNavigationProp<
-  ProfileRoutes,
-  'EditProfileScreen'
->;
+type Nav = StackNavigationProp<RootStackParamList, 'EditProfileScreen'>;
 
 const EditProfileScreen = () => {
-  const navigation = useNavigation<ProfileNavigationProp>();
+  const navigation = useNavigation<Nav>();
   const { colors, spacing, radii, textVariants } = useTheme();
+  const { userId } = useAuth();
 
-  const [username, setUsername] = useState('@jerrycan');
-  const [links, setLinks] = useState<string[]>(['www.link.com']);
-  const [profileSong, setProfileSong] = useState<string | null>('Song 2');
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [displayName,  setDisplayName]  = useState('');
+  const [username,     setUsername]     = useState('');
+  const [bio,          setBio]          = useState('');
+  const [avatarUri,    setAvatarUri]    = useState<string | null>(null);
+  const [avatarBase64, setAvatarBase64] = useState<{ base64: string; ext: string } | null>(null);
+  const [saving,       setSaving]       = useState(false);
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    getMe().then(me => {
+      setDisplayName(me.display_name ?? '');
+      setUsername(me.username ?? '');
+      setBio(me.bio ?? '');
+      setAvatarUri(me.avatar_url ?? null);
+    }).catch(() => {});
+  }, []);
 
   const handlePickPhoto = async () => {
     try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
-        selectionLimit: 1,
-      });
-      if (result.didCancel) return;
-      if (result.errorCode) {
-        Alert.alert('Error', 'Failed to pick an image. Please try again.');
-        return;
+      const result = await launchImageLibrary({ mediaType: 'photo', selectionLimit: 1, includeBase64: true });
+      if (result.didCancel || !result.assets?.length) return;
+      const asset = result.assets[0];
+      if (asset.uri) setAvatarUri(asset.uri);
+      if (asset.base64) {
+        const ext = asset.uri?.split('.').pop()?.toLowerCase() ?? 'jpg';
+        setAvatarBase64({ base64: asset.base64, ext });
       }
-      const uri = result.assets?.[0]?.uri;
-      if (uri) {
-        setProfilePhoto(uri);
-        console.log('Profile photo selected:', uri);
-      } else {
-        Alert.alert('Error', 'No image was selected. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick an image. Please try again.');
+    } catch {
+      Alert.alert('Error', 'Failed to pick an image.');
     }
   };
 
-  const handleAddLink = () => {
-    // UI-only: append a placeholder new link for now.
-    console.log('Add link tapped');
-    setLinks(prev => [...prev, 'www.newlink.com']);
+  const uploadAvatar = async (): Promise<string | null> => {
+    if (!avatarBase64 || !userId) return null;
+    const { base64, ext } = avatarBase64;
+    const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+    const path = `avatars/${userId}/avatar.${ext}`;
+    const arrayBuffer = await fetch(`data:${mimeType};base64,${base64}`).then(r => r.arrayBuffer());
+    const { error } = await supabase.storage
+      .from('post-media')
+      .upload(path, arrayBuffer, { contentType: mimeType, upsert: true });
+    if (error) throw new Error(`Avatar upload failed: ${error.message}`);
+    return supabase.storage.from('post-media').getPublicUrl(path).data.publicUrl;
   };
 
-  const handleChangeSong = () => {
-    console.log('Change song tapped');
-    // Placeholder: in a real implementation open a song picker.
+  const handleSave = async () => {
+    if (!displayName.trim()) {
+      Alert.alert('Validation', 'Display name cannot be empty.');
+      return;
+    }
+    setSaving(true);
+    try {
+      let newAvatarUrl: string | null | undefined;
+      if (avatarBase64) {
+        newAvatarUrl = await uploadAvatar();
+      }
+
+      await updateMe({
+        display_name: displayName.trim(),
+        bio: bio.trim() || null,
+        ...(newAvatarUrl ? { avatar_url: newAvatarUrl } : {}),
+      });
+
+      navigation.goBack();
+    } catch (err: any) {
+      Alert.alert('Error', err?.message ?? 'Failed to save changes.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleRemoveSong = () => {
-    setProfileSong(null);
-    console.log('Profile song removed');
-  };
-
-  const handleRemovePhoto = () => {
-    setProfilePhoto(null);
-    console.log('Profile photo removed');
-  };
-
-  const handleSaveChanges = () => {
-    console.log('Edit profile form values:', {
-      username,
-      links,
-      profileSong,
-      profilePhoto,
-      isPrivate,
-    });
-  };
-
-  // ── Shared section-header style ────────────────────────────────────────────
   const SectionLabel = ({ children }: { children: string }) => (
-    <Text
-      style={[
-        textVariants.h4 as any,
-        { color: colors.textPrimary, marginBottom: spacing['3'] },
-      ]}
-    >
+    <Text style={[textVariants.caption as any, {
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing['2'],
+    }]}>
       {children}
     </Text>
-  );
-
-  // ── Shared small action button ─────────────────────────────────────────────
-  const SmallButton = ({
-    label,
-    onPress,
-  }: {
-    label: string;
-    onPress: () => void;
-  }) => (
-    <Pressable
-      onPress={onPress}
-      style={{
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: radii.sm,
-        paddingHorizontal: spacing['3'],
-        paddingVertical: spacing['1'],
-        marginRight: spacing['2'],
-      }}
-    >
-      <Text style={[textVariants.body as any, { color: colors.textPrimary }]}>
-        {label}
-      </Text>
-    </Pressable>
   );
 
   return (
@@ -151,159 +113,83 @@ const EditProfileScreen = () => {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View
-          style={{
-            flex: 1,
-            paddingHorizontal: spacing['4'],
-            paddingVertical: spacing['4'],
-          }}
-        >
-          <Text
-            style={[
-              textVariants.h2 as any,
-              { color: colors.textPrimary, marginBottom: spacing['6'] },
-            ]}
-          >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+        <View style={{ flex: 1, paddingHorizontal: spacing['4'], paddingVertical: spacing['4'] }}>
+
+          {/* Header */}
+          <Text style={[textVariants.h2 as any, { color: colors.textPrimary, marginBottom: spacing['6'] }]}>
             Edit Profile
           </Text>
 
-          {/* ── Username ── */}
-          <View style={{ marginBottom: spacing['6'] }}>
-            <Input
-              label="Username"
-              value={username}
-              onChangeText={setUsername}
-              placeholder="@username"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-
-          {/* ── Added Links ── */}
-          <View style={{ marginBottom: spacing['6'] }}>
-            <SectionLabel>Added Links</SectionLabel>
-            {links.map((link, idx) => (
-              <Text
-                key={idx}
-                style={[
-                  textVariants.body as any,
-                  { color: colors.textSecondary, marginBottom: spacing['1'] },
-                ]}
-              >
-                {link}
-              </Text>
-            ))}
-            <Pressable onPress={handleAddLink} style={{ marginTop: spacing['2'] }}>
-              <Text
-                style={[textVariants.body as any, { color: colors.primary }]}
-              >
-                + ADD
-              </Text>
+          {/* Avatar */}
+          <View style={{ alignItems: 'center', marginBottom: spacing['6'] }}>
+            <Avatar uri={avatarUri} name={displayName} size="xl" style={{ marginBottom: spacing['3'] }} />
+            <Pressable onPress={handlePickPhoto}>
+              <Text style={[textVariants.body as any, { color: colors.primary }]}>Change Photo</Text>
             </Pressable>
+            {avatarBase64 && (
+              <Pressable onPress={() => { setAvatarUri(null); setAvatarBase64(null); }} style={{ marginTop: spacing['1'] }}>
+                <Text style={[textVariants.caption as any, { color: colors.textSecondary }]}>Remove</Text>
+              </Pressable>
+            )}
           </View>
 
-          {/* ── Profile Song ── */}
-          <View style={{ marginBottom: spacing['6'] }}>
-            <SectionLabel>Profile Song</SectionLabel>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {profileSong ? (
-                <>
-                  <Text
-                    style={[
-                      textVariants.body as any,
-                      { color: colors.textSecondary, marginRight: spacing['3'] },
-                    ]}
-                  >
-                    {profileSong}
-                  </Text>
-                  <SmallButton label="Change" onPress={handleChangeSong} />
-                  <SmallButton label="Remove" onPress={handleRemoveSong} />
-                </>
-              ) : (
-                <SmallButton label="+ Add Song" onPress={handleChangeSong} />
-              )}
-            </View>
-          </View>
-
-          {/* ── Profile Picture ── */}
-          <View style={{ marginBottom: spacing['6'] }}>
-            <SectionLabel>Profile Picture</SectionLabel>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {/* Thumbnail */}
-              {profilePhoto ? (
-                <Image
-                  source={{ uri: profilePhoto }}
-                  style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: radii.sm,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    marginRight: spacing['4'],
-                  }}
-                />
-              ) : (
-                <View
-                  style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: radii.sm,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: colors.surface,
-                    marginRight: spacing['4'],
-                  }}
-                />
-              )}
-              {/* Change / Remove stacked vertically */}
-              <View>
-                <SmallButton label="Change" onPress={handlePickPhoto} />
-                <View style={{ height: spacing['2'] }} />
-                <SmallButton label="Remove" onPress={handleRemovePhoto} />
-              </View>
-            </View>
-          </View>
-
-          {/* ── Private Profile toggle ── */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: spacing['6'],
-            }}
-          >
-            <Text
-              style={[textVariants.h4 as any, { color: colors.textPrimary }]}
-            >
-              Private Profile
-            </Text>
-            <Switch
-              value={isPrivate}
-              onValueChange={setIsPrivate}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.background}
+          {/* Display Name */}
+          <View style={{ marginBottom: spacing['4'] }}>
+            <SectionLabel>Display Name</SectionLabel>
+            <Input
+              value={displayName}
+              onChangeText={setDisplayName}
+              placeholder="Your name"
+              autoCapitalize="words"
             />
           </View>
 
-          {/* ── Actions ── */}
+          {/* Username (read-only for now) */}
+          <View style={{ marginBottom: spacing['4'] }}>
+            <SectionLabel>Username</SectionLabel>
+            <View style={{
+              paddingHorizontal: spacing['3'],
+              paddingVertical: spacing['3'],
+              backgroundColor: colors.surface,
+              borderRadius: radii.md,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}>
+              <Text style={[textVariants.body as any, { color: colors.textSecondary }]}>
+                @{username}
+              </Text>
+            </View>
+            <Text style={[textVariants.caption as any, { color: colors.textSecondary, marginTop: spacing['1'] }]}>
+              Username changes coming soon
+            </Text>
+          </View>
+
+          {/* Bio */}
+          <View style={{ marginBottom: spacing['6'] }}>
+            <SectionLabel>Bio</SectionLabel>
+            <Input
+              value={bio}
+              onChangeText={setBio}
+              placeholder="Tell people about yourself…"
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+
+          {/* Actions */}
           <Button
-            label="Save Changes"
-            onPress={handleSaveChanges}
+            label={saving ? 'Saving…' : 'Save Changes'}
+            onPress={handleSave}
             variant="primary"
             size="md"
-            style={{ marginTop: spacing['2'] }}
+            style={{ marginBottom: spacing['3'] }}
           />
           <Button
             label="Cancel"
             onPress={() => navigation.goBack()}
             variant="ghost"
             size="md"
-            style={{ marginTop: spacing['2'] }}
           />
         </View>
       </ScrollView>

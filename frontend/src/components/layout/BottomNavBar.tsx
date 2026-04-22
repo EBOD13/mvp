@@ -2,6 +2,8 @@ import React from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Home, Compass, Mail, CircleUser, Plus } from 'lucide-react-native';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 
@@ -11,23 +13,29 @@ export type BottomNavBarProps = {
 };
 
 type NavProp = StackNavigationProp<RootStackParamList>;
-
 type TabRoute = 'HomeFeedScreen' | 'DiscoverScreen' | 'MessagesScreen' | 'ProfileScreen';
 
-const TABS: { key: TabRoute; label: string; icon: string }[] = [
-  { key: 'HomeFeedScreen', label: 'Home',     icon: '⌂' },
-  { key: 'DiscoverScreen', label: 'Discover', icon: '⊙' },
-  { key: 'MessagesScreen', label: 'Messages', icon: '✉' },
-  { key: 'ProfileScreen',  label: 'Profile',  icon: '◉' },
-];
-
 const NAV_HEIGHT = 64;
+
+type TabDef = {
+  key: TabRoute;
+  label: string;
+  Icon: React.FC<{ size: number; color: string }>;
+};
+
+const TABS: TabDef[] = [
+  { key: 'HomeFeedScreen', label: 'Home',     Icon: Home },
+  { key: 'DiscoverScreen', label: 'Discover', Icon: Compass },
+  { key: 'MessagesScreen', label: 'Messages', Icon: Mail },
+  { key: 'ProfileScreen',  label: 'Profile',  Icon: CircleUser },
+];
 
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeRoute, onAddPress }) => {
   const navigation = useNavigation<NavProp>();
   const { colors, spacing, shadows } = useTheme();
+  const insets = useSafeAreaInsets();
 
-  const renderTab = (tab: { key: TabRoute; label: string; icon: string }) => {
+  const renderTab = (tab: TabDef) => {
     const isActive = activeRoute === tab.key;
     const color = isActive ? colors.primary : colors.textDisabled;
     return (
@@ -36,14 +44,14 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeRoute, onAddPress }) 
         style={{
           flex: 1,
           alignItems: 'center',
-          justifyContent: 'center',
-          paddingVertical: spacing['2'],
+          justifyContent: 'flex-start',
+          paddingTop: spacing['2'],
         }}
         onPress={() => navigation.navigate(tab.key)}
         activeOpacity={0.7}
       >
-        <Text style={{ fontSize: 22, color, lineHeight: 26 }}>{tab.icon}</Text>
-        <Text style={{ fontSize: 11, color, marginTop: 2, fontWeight: '500' }}>{tab.label}</Text>
+        <tab.Icon size={22} color={color} />
+        <Text style={{ fontSize: 11, color, marginTop: 3, fontWeight: '500' }}>{tab.label}</Text>
       </TouchableOpacity>
     );
   };
@@ -53,21 +61,21 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeRoute, onAddPress }) 
       style={[
         {
           flexDirection: 'row',
-          height: NAV_HEIGHT,
+          height: NAV_HEIGHT + insets.bottom,
+          paddingBottom: insets.bottom,
           backgroundColor: colors.surfaceElevated,
           borderTopWidth: 1,
           borderTopColor: colors.border,
-          alignItems: 'center',
+          alignItems: 'flex-start',
         },
         shadows.md,
       ]}
     >
-      {/* Home, Discover */}
       {TABS.slice(0, 2).map(renderTab)}
 
-      {/* Center Add Button — visually elevated above the bar */}
+      {/* Center Add Button */}
       <TouchableOpacity
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+        style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingTop: spacing['2'] }}
         onPress={onAddPress}
         activeOpacity={0.8}
       >
@@ -80,26 +88,15 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeRoute, onAddPress }) 
               backgroundColor: colors.primary,
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: 20,
+              marginTop: -16,
             },
             shadows.md,
           ]}
         >
-          <Text
-            style={{
-              fontSize: 30,
-              color: colors.textInverse,
-              lineHeight: 34,
-              fontWeight: '300',
-              includeFontPadding: false,
-            }}
-          >
-            +
-          </Text>
+          <Plus size={26} color={colors.textInverse} />
         </View>
       </TouchableOpacity>
 
-      {/* Messages, Profile */}
       {TABS.slice(2).map(renderTab)}
     </View>
   );

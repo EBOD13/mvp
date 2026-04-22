@@ -11,6 +11,7 @@ class UserProfile(BaseModel):
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
     is_verified: bool
+    phriends_count: int = 0
     created_at: datetime
 
 

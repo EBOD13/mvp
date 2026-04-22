@@ -32,7 +32,10 @@ export const useFeed = (filter: 'phriends' | 'passions') => {
         setHasMore(res.data.length === LIMIT);
         offsetRef.current = res.data.length;
       } catch {
-        if (mounted) setError('Failed to load posts.');
+        if (mounted) {
+          setError('Failed to load posts.');
+          setHasMore(false);
+        }
       } finally {
         loadingRef.current = false;
         if (mounted) setLoading(false);
@@ -54,7 +57,7 @@ export const useFeed = (filter: 'phriends' | 'passions') => {
       setHasMore(res.data.length === LIMIT);
       offsetRef.current += res.data.length;
     } catch {
-      // Silently fail — keep existing posts intact
+      setHasMore(false);
     } finally {
       loadingRef.current = false;
       setLoading(false);

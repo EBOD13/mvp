@@ -1,13 +1,13 @@
 // src/components/cards/PostCard.tsx
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Image } from 'react-native';
+import { MessageCircle, Bookmark, Ellipsis } from 'lucide-react-native';
+import PassionFruitLike from '../icons/PassionFruitLike';
+import PassionFruitRating from '../icons/PassionFruitRating';
 import { useTheme } from '../../theme';
 import { Avatar } from '../common/Avatar';
 import { PostResponse } from '../../types/feed';
 
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
 export type PostCardProps = {
   post: PostResponse;
   onLike: () => void;
@@ -16,15 +16,10 @@ export type PostCardProps = {
   onUnsave: () => void;
   onCommentPress: () => void;
   onAuthorPress: () => void;
-  /** Provided only when the viewer is the post author */
   onEditPress?: () => void;
-  /** Provided only when the viewer is the post author */
   onDeletePress?: () => void;
 };
 
-// ---------------------------------------------------------------------------
-// PostCard
-// ---------------------------------------------------------------------------
 const PostCard: React.FC<PostCardProps> = ({
   post,
   onLike,
@@ -158,10 +153,9 @@ const PostCard: React.FC<PostCardProps> = ({
           <Text style={s.timeAgo}>{formatTime(post.created_at)}</Text>
         </View>
 
-        {/* Options menu — only for the post author */}
         {showOptionsMenu && (
           <TouchableOpacity onPress={handleOptionsMenu} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-            <Text style={{ fontSize: fontSizes.lg, color: colors.textDisabled, letterSpacing: 2 }}>···</Text>
+            <Ellipsis size={20} color={colors.textDisabled} />
           </TouchableOpacity>
         )}
       </View>
@@ -173,28 +167,48 @@ const PostCard: React.FC<PostCardProps> = ({
         </TouchableOpacity>
       )}
 
+      {/* ── Review rating ───────────────────────────────────────────────── */}
+      {post.is_review && post.rating != null && post.rating > 0 && (
+        <View style={{ marginBottom: spacing['3'] }}>
+          <PassionFruitRating value={post.rating} size={18} />
+        </View>
+      )}
+
       {/* ── Post body ───────────────────────────────────────────────────── */}
       <Text style={s.content}>{post.content}</Text>
 
+      {/* ── Media ───────────────────────────────────────────────────────── */}
+      {post.media_urls && post.media_urls.length > 0 && (
+        <Image
+          source={{ uri: post.media_urls[0] }}
+          style={{
+            width: '100%',
+            aspectRatio: 4 / 3,
+            borderRadius: radii.md,
+            marginBottom: spacing['3'],
+            backgroundColor: colors.border,
+          }}
+          resizeMode="cover"
+        />
+      )}
+
       {/* ── Action row ──────────────────────────────────────────────────── */}
       <View style={s.actions}>
-        {/* Like */}
-        <TouchableOpacity
-          onPress={() => (post.is_liked ? onUnlike() : onLike())}
-          style={s.actionButton}
-          activeOpacity={0.7}
-        >
-          <Text style={{ fontSize: fontSizes.lg, color: post.is_liked ? colors.primary : colors.textDisabled }}>
-            {post.is_liked ? '♥' : '♡'}
-          </Text>
+        {/* Like — passion fruit animation */}
+        <View style={s.actionButton}>
+          <PassionFruitLike
+            liked={post.is_liked}
+            onPress={() => (post.is_liked ? onUnlike() : onLike())}
+            size={24}
+          />
           <Text style={[s.actionCount, { color: post.is_liked ? colors.primary : colors.textSecondary }]}>
             {post.like_count}
           </Text>
-        </TouchableOpacity>
+        </View>
 
         {/* Comments */}
         <TouchableOpacity onPress={onCommentPress} style={s.actionButton} activeOpacity={0.7}>
-          <Text style={{ fontSize: fontSizes.lg, color: colors.textDisabled }}>💬</Text>
+          <MessageCircle size={18} color={colors.textDisabled} />
           <Text style={[s.actionCount, { color: colors.textSecondary }]}>{post.comment_count}</Text>
         </TouchableOpacity>
 
@@ -204,9 +218,11 @@ const PostCard: React.FC<PostCardProps> = ({
           style={s.actionButton}
           activeOpacity={0.7}
         >
-          <Text style={{ fontSize: fontSizes.lg, color: post.is_saved ? colors.primary : colors.textDisabled }}>
-            🔖
-          </Text>
+          <Bookmark
+            size={18}
+            color={post.is_saved ? colors.primary : colors.textDisabled}
+            fill={post.is_saved ? colors.primary : 'transparent'}
+          />
           <Text style={[s.actionCount, { color: post.is_saved ? colors.primary : colors.textSecondary }]}>
             {post.is_saved ? 'Saved' : 'Save'}
           </Text>

@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getToken, setToken, clearToken } from '../lib/secureStorage';
 import * as authApi from '../api/authApi';
+import { getMe } from '../api/userApi';
 import apiClient from '../lib/apiClient';
+import { supabase } from '../lib/supabase';
 
 interface AuthContextValue {
   userId: string | null;
@@ -36,12 +38,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []); // setAccessToken / setUserId are stable setState references
 
   useEffect(() => {
+    if (accessToken) {
+      apiClient.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+    } else {
+      delete apiClient.defaults.headers.common.Authorization;
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
     let mounted = true;
 
     async function restoreSession() {
       const token = await getToken();
       if (!mounted) return;
+
+      if (!token) {
+        setAccessToken(null);
+        setUserId(null);
+        setIsLoading(false);
+        return;
+      }
+
       setAccessToken(token);
+
+      try {
+        const me = await getMe();
+        if (!mounted) return;
+        setUserId(me.id);
+      } catch {
+        await clearToken();
+        if (!mounted) return;
+        setAccessToken(null);
+        setUserId(null);
+      }
+
       setIsLoading(false);
     }
 
@@ -57,6 +87,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await setToken(response.access_token);
     setAccessToken(response.access_token);
     setUserId(response.user_id);
+    await supabase.auth.setSession({
+      access_token: response.access_token,
+      refresh_token: response.refresh_token,
+    });
   }
 
   async function signup(email: string, password: string, username: string, displayName: string) {
@@ -69,6 +103,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await setToken(response.access_token);
     setAccessToken(response.access_token);
     setUserId(response.user_id);
+    await supabase.auth.setSession({
+      access_token: response.access_token,
+      refresh_token: response.refresh_token,
+    });
   }
 
   async function logout() {
