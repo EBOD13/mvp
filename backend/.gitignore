@@ -1,3 +1,27 @@
+# Environment 
 .env
+/frontend/env.d.ts
+/frontend/src/config/env.ts
+
+# Keys
 keys
 \keys
+
+# Pycache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# macOS
+.DS_Store
+
+# Python venv
+.venv/
+
+# Frontend junk 
+node_modules/
+*.lock
+
+# settings.json
+/.claude/settings.json
