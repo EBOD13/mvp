@@ -238,8 +238,8 @@ const PassionDetailScreen: React.FC = () => {
 
         <ImageBackground
           source={
-            passion.coverImageUrl
-              ? { uri: passion.coverImageUrl }
+            passion.coverUrl
+              ? { uri: passion.coverUrl }
               : undefined
           }
           style={{

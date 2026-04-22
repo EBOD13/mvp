@@ -2,22 +2,36 @@ import { supabase } from '../lib/supabase';
 import apiClient from '../lib/apiClient';
 import { PostResponse, PostCreate, PostUpdate } from '../types/feed';
 
-export async function uploadPostImage(base64: string, ext: string, userId: string): Promise<string> {
-  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-  const path = `${userId}/${Date.now()}.${ext}`;
+export type MediaAsset = {
+  uri: string;          // local file:// or ph:// URI for display
+  base64?: string;      // present for images from picker
+  mimeType: string;     // e.g. 'image/jpeg', 'video/mp4'
+  ext: string;          // 'jpg', 'mp4', etc.
+};
 
-  // Decode base64 → ArrayBuffer via a data URI — works reliably in React Native
-  const dataUri = `data:${mimeType};base64,${base64}`;
-  const arrayBuffer = await fetch(dataUri).then(r => r.arrayBuffer());
+export async function uploadMediaAsset(asset: MediaAsset, userId: string): Promise<string> {
+  const path = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${asset.ext}`;
+
+  let arrayBuffer: ArrayBuffer;
+  if (asset.base64) {
+    // Images: decode base64 via data URI (fast, no second fetch)
+    arrayBuffer = await fetch(`data:${asset.mimeType};base64,${asset.base64}`).then(r => r.arrayBuffer());
+  } else {
+    // Videos: fetch the local URI directly
+    arrayBuffer = await fetch(asset.uri).then(r => r.arrayBuffer());
+  }
 
   const { error } = await supabase.storage
     .from('post-media')
-    .upload(path, arrayBuffer, { contentType: mimeType, upsert: false });
+    .upload(path, arrayBuffer, { contentType: asset.mimeType, upsert: false });
 
-  if (error) throw new Error(`Storage upload failed: ${error.message}`);
+  if (error) throw new Error(`Upload failed: ${error.message}`);
 
-  const { data } = supabase.storage.from('post-media').getPublicUrl(path);
-  return data.publicUrl;
+  return supabase.storage.from('post-media').getPublicUrl(path).data.publicUrl;
+}
+
+export async function uploadMediaAssets(assets: MediaAsset[], userId: string): Promise<string[]> {
+  return Promise.all(assets.map(a => uploadMediaAsset(a, userId)));
 }
 
 export const postApi = {

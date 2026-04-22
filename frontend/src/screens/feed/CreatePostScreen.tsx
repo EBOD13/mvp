@@ -1,24 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  FlatList,
+  Image,
   Alert,
+  Platform,
+  KeyboardAvoidingView,
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { X, Images, Video, Globe, Lock } from 'lucide-react-native';
 
 import { useTheme } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
-import { postApi, uploadPostImage } from '../../api/postApi';
+import { postApi, uploadMediaAssets, MediaAsset } from '../../api/postApi';
 import { RootStackParamList } from '../../navigation/types';
-import { X, Camera } from 'lucide-react-native';
 import { Avatar } from '../../components/common/Avatar';
 import PassionFruitRating from '../../components/icons/PassionFruitRating';
 
@@ -28,55 +31,9 @@ type RoutePropT = RouteProp<RootStackParamList, 'CreatePostScreen'>;
 type Visibility = 'public' | 'private';
 type PostType   = 'post' | 'review';
 
-// ---------------------------------------------------------------------------
-// Reusable segment toggle
-// ---------------------------------------------------------------------------
-type SegmentProps<T extends string> = {
-  options: { value: T; label: string }[];
-  value: T;
-  onChange: (v: T) => void;
-};
+const MAX_MEDIA = 12;
+const SCREEN_W  = Dimensions.get('window').width;
 
-function SegmentToggle<T extends string>({ options, value, onChange }: SegmentProps<T>) {
-  const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
-  return (
-    <View style={{
-      flexDirection: 'row',
-      backgroundColor: colors.surface,
-      borderRadius: radii.full,
-      padding: 3,
-      borderWidth: 1,
-      borderColor: colors.border,
-    }}>
-      {options.map(opt => (
-        <TouchableOpacity
-          key={opt.value}
-          style={{
-            flex: 1,
-            paddingVertical: spacing['2'],
-            borderRadius: radii.full,
-            backgroundColor: value === opt.value ? colors.primary : 'transparent',
-            alignItems: 'center',
-          }}
-          onPress={() => onChange(opt.value)}
-          activeOpacity={0.8}
-        >
-          <Text style={{
-            fontSize: fontSizes.sm,
-            fontWeight: fontWeights.semibold,
-            color: value === opt.value ? colors.textInverse : colors.textSecondary,
-          }}>
-            {opt.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// CreatePostScreen
-// ---------------------------------------------------------------------------
 const CreatePostScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route      = useRoute<RoutePropT>();
@@ -84,64 +41,79 @@ const CreatePostScreen: React.FC = () => {
   const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
 
   const editPost = route.params?.post;
-  const isEdit   = editPost !== undefined;
+  const isEdit   = !!editPost;
 
-  // ── Form state ─────────────────────────────────────────────────────────────
-  const [content,         setContent]         = useState(editPost?.content ?? '');
-  const [passionId,       setPassionId]        = useState<string | null>(editPost?.passion_id ?? null);
-  const [visibility,      setVisibility]       = useState<Visibility>(editPost?.visibility ?? 'public');
-  const [commentsEnabled, setCommentsEnabled]  = useState(editPost?.comments_enabled ?? true);
-  const [postType,        setPostType]         = useState<PostType>(editPost?.is_review ? 'review' : 'post');
-  const [rating,          setRating]           = useState<number>(editPost?.rating ?? 0);
-  const [mediaUrls,       setMediaUrls]        = useState<string[]>(editPost?.media_urls ?? []);
-  const [mediaBase64,     setMediaBase64]      = useState<{ base64: string; ext: string } | null>(null);
-  const [submitting,      setSubmitting]       = useState(false);
+  const [content,         setContent]        = useState(editPost?.content ?? '');
+  const [passionId,       setPassionId]       = useState<string | null>(editPost?.passion_id ?? null);
+  const [visibility,      setVisibility]      = useState<Visibility>(editPost?.visibility ?? 'public');
+  const [commentsEnabled, setCommentsEnabled] = useState(editPost?.comments_enabled ?? true);
+  const [postType,        setPostType]        = useState<PostType>(editPost?.is_review ? 'review' : 'post');
+  const [rating,          setRating]          = useState<number>(editPost?.rating ?? 0);
+  const [mediaAssets,     setMediaAssets]     = useState<MediaAsset[]>([]);
+  const [previewUris,     setPreviewUris]     = useState<string[]>(editPost?.media_urls ?? []);
+  const [submitting,      setSubmitting]      = useState(false);
+  const [previewIndex,    setPreviewIndex]    = useState(0);
 
-  const isReview = postType === 'review';
+  const isReview  = postType === 'review';
+  const canSubmit = (content.trim().length > 0 || previewUris.length > 0) && !submitting;
+
+  useEffect(() => {
+    if (!isReview) setRating(0);
+  }, [isReview]);
 
   useEffect(() => {
     if (visibility === 'private') setCommentsEnabled(false);
   }, [visibility]);
 
-  useEffect(() => {
-    if (!isReview) {
-      setRating(0);
-      setMediaUrls([]);
-      setMediaBase64(null);
+  const pickMedia = async (type: 'photo' | 'video' | 'mixed') => {
+    const remaining = MAX_MEDIA - previewUris.length;
+    if (remaining <= 0) {
+      Alert.alert('Limit reached', `You can add at most ${MAX_MEDIA} items.`);
+      return;
     }
-  }, [isReview]);
-
-  const canSubmit = content.trim().length > 0 && !submitting;
-
-  const handlePickPhoto = async () => {
     try {
       const result = await launchImageLibrary({
-        mediaType: 'photo',
-        selectionLimit: 1,
+        mediaType: type,
+        selectionLimit: remaining,
         includeBase64: true,
+        videoQuality: 'medium',
       });
-      if (result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        if (asset.uri) setMediaUrls([asset.uri]);
-        if (asset.base64) {
-          const ext = (asset.uri?.split('.').pop()?.toLowerCase()) ?? 'jpg';
-          setMediaBase64({ base64: asset.base64, ext });
-        }
-      }
+      if (!result.assets?.length) return;
+
+      const newAssets: MediaAsset[] = result.assets.map(a => ({
+        uri:      a.uri ?? '',
+        base64:   a.base64 ?? undefined,
+        mimeType: a.type ?? (a.uri?.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg'),
+        ext:      a.uri?.split('.').pop()?.toLowerCase() ?? 'jpg',
+      }));
+
+      setMediaAssets(prev => [...prev, ...newAssets]);
+      setPreviewUris(prev => [...prev, ...newAssets.map(a => a.uri)]);
     } catch {
-      Alert.alert('Error', 'Could not open photo library.');
+      Alert.alert('Error', 'Could not open media library.');
     }
+  };
+
+  const removeMedia = (index: number) => {
+    setMediaAssets(prev => prev.filter((_, i) => i !== index));
+    setPreviewUris(prev => prev.filter((_, i) => i !== index));
+    setPreviewIndex(p => Math.min(p, previewUris.length - 2));
   };
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      // Upload image to Supabase Storage if we have a new local pick
-      let finalMediaUrls = isReview ? mediaUrls : [];
-      if (isReview && mediaBase64 && userId) {
-        const publicUrl = await uploadPostImage(mediaBase64.base64, mediaBase64.ext, userId);
-        finalMediaUrls = [publicUrl];
+      // Upload any local assets that haven't been uploaded yet
+      let finalUrls = previewUris;
+      const localAssets = mediaAssets.filter(a => a.uri.startsWith('file://') || a.uri.startsWith('ph://'));
+      if (localAssets.length > 0 && userId) {
+        const uploaded = await uploadMediaAssets(localAssets, userId);
+        // Replace local URIs with public URLs in the same order
+        finalUrls = previewUris.map(uri => {
+          const idx = localAssets.findIndex(a => a.uri === uri);
+          return idx >= 0 ? uploaded[idx] : uri;
+        });
       }
 
       const payload = {
@@ -151,8 +123,9 @@ const CreatePostScreen: React.FC = () => {
         comments_enabled: commentsEnabled,
         is_review:        isReview,
         rating:           isReview && rating > 0 ? rating : null,
-        media_urls:       finalMediaUrls,
+        media_urls:       finalUrls,
       };
+
       if (isEdit && editPost) {
         await postApi.updatePost(editPost.id, payload);
       } else {
@@ -166,79 +139,104 @@ const CreatePostScreen: React.FC = () => {
     }
   };
 
+  // ── Media preview strip ────────────────────────────────────────────────────
+  const PREVIEW_GAP  = 16;
+  const PREVIEW_SIZE = SCREEN_W - spacing['8'] * 2;
+  const PREVIEW_STEP = PREVIEW_SIZE + PREVIEW_GAP;
+
+  const renderPreviewItem = ({ item, index }: { item: string; index: number }) => {
+    const isVideo = item.endsWith('.mp4') || item.endsWith('.mov') ||
+      (mediaAssets[index]?.mimeType ?? '').startsWith('video');
+    return (
+      <View style={{ width: PREVIEW_SIZE, aspectRatio: 1, borderRadius: radii.lg, overflow: 'hidden', marginRight: index < previewUris.length - 1 ? PREVIEW_GAP : 0 }}>
+        <Image
+          source={{ uri: item }}
+          style={{ width: '100%', height: '100%' }}
+          resizeMode="cover"
+        />
+        {isVideo && (
+          <View style={{
+            ...StyleSheet_absoluteFill,
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Video size={40} color="#fff" />
+          </View>
+        )}
+        <TouchableOpacity
+          onPress={() => removeMedia(index)}
+          style={{
+            position: 'absolute', top: spacing['2'], right: spacing['2'],
+            backgroundColor: 'rgba(0,0,0,0.55)',
+            borderRadius: 12, padding: 4,
+          }}
+        >
+          <X size={14} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        {/* ── Header ──────────────────────────────────────────────────────── */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+
+        {/* ── Header ────────────────────────────────────────────────────────── */}
         <View style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
           paddingHorizontal: spacing['4'],
-          paddingTop: spacing['5'],
-          paddingBottom: spacing['3'],
+          paddingVertical: spacing['3'],
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
         }}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing['1'],
-              paddingHorizontal: spacing['3'],
-              paddingVertical: spacing['2'],
-              borderRadius: radii.full,
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <X size={14} color={colors.textSecondary} />
-            <Text style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.medium, color: colors.textSecondary }}>
-              Cancel
-            </Text>
+            <X size={22} color={colors.textPrimary} />
           </TouchableOpacity>
 
-          <Text style={{
-            fontSize: fontSizes.lg,
-            fontWeight: fontWeights.semibold,
-            color: colors.textPrimary,
-          }}>
+          <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.textPrimary }}>
             {isEdit ? 'Edit Post' : 'New Post'}
           </Text>
 
-          <TouchableOpacity onPress={handleSubmit} disabled={!canSubmit}>
-            <Text style={{
-              fontSize: fontSizes.md,
-              fontWeight: fontWeights.semibold,
-              color: canSubmit ? colors.primary : colors.textDisabled,
-            }}>
-              {submitting ? 'Saving…' : isEdit ? 'Save' : 'Post'}
-            </Text>
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={!canSubmit}
+            style={{
+              backgroundColor: canSubmit ? colors.primary : colors.border,
+              paddingHorizontal: spacing['4'],
+              paddingVertical: spacing['2'],
+              borderRadius: radii.full,
+            }}
+          >
+            {submitting
+              ? <ActivityIndicator size="small" color="#fff" />
+              : <Text style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.semibold, color: '#fff' }}>
+                  {isEdit ? 'Save' : 'Post'}
+                </Text>
+            }
           </TouchableOpacity>
         </View>
 
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
-          {/* ── Compose area ──────────────────────────────────────────────── */}
-          <View style={{
-            flexDirection: 'row',
-            padding: spacing['4'],
-            gap: spacing['3'],
-            minHeight: 120,
-          }}>
-            <Avatar size="md" name={userId ?? 'Me'} />
-
+        {/* ── Compose area ──────────────────────────────────────────────────── */}
+        <View style={{
+          flexDirection: 'row',
+          paddingHorizontal: spacing['4'],
+          paddingTop: spacing['4'],
+          paddingBottom: spacing['2'],
+        }}>
+          <Avatar size="md" name={userId ?? ''} style={{ marginTop: 2 }} />
+          <View style={{ flex: 1, marginLeft: spacing['3'] }}>
             <TextInput
               style={{
-                flex: 1,
                 fontSize: fontSizes.md,
                 color: colors.textPrimary,
+                minHeight: 80,
                 textAlignVertical: 'top',
-                paddingTop: 2,
               }}
               placeholder={isReview ? 'Share your thoughts on this passion…' : "What's on your mind?"}
               placeholderTextColor={colors.textDisabled}
@@ -247,162 +245,152 @@ const CreatePostScreen: React.FC = () => {
               multiline
               autoFocus={!isEdit}
             />
+            {/* Review rating */}
+            {isReview && (
+              <View style={{ marginTop: spacing['2'] }}>
+                <PassionFruitRating value={rating} onChange={setRating} size={26} />
+              </View>
+            )}
           </View>
+        </View>
 
-          {/* ── Options ───────────────────────────────────────────────────── */}
-          <View style={{
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-            padding: spacing['4'],
-            gap: spacing['4'],
-          }}>
-
-            {/* Post / Review toggle */}
-            <SegmentToggle<PostType>
-              options={[
-                { value: 'post',   label: 'Post'   },
-                { value: 'review', label: 'Review' },
-              ]}
-              value={postType}
-              onChange={setPostType}
+        {/* ── Media preview carousel ─────────────────────────────────────────── */}
+        {previewUris.length > 0 && (
+          <View style={{ marginHorizontal: spacing['4'], marginBottom: spacing['3'] }}>
+            <FlatList
+              data={previewUris}
+              keyExtractor={(_, i) => String(i)}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={PREVIEW_STEP}
+              decelerationRate="fast"
+              renderItem={renderPreviewItem}
+              onMomentumScrollEnd={e => {
+                const idx = Math.round(e.nativeEvent.contentOffset.x / PREVIEW_STEP);
+                setPreviewIndex(idx);
+              }}
+              getItemLayout={(_, index) => ({ length: PREVIEW_STEP, offset: PREVIEW_STEP * index, index })}
             />
-
-            {/* Rating — only when review */}
-            {isReview && (
-              <View>
-                <Text style={{
-                  fontSize: fontSizes.sm,
-                  fontWeight: fontWeights.medium,
-                  color: colors.textSecondary,
-                  marginBottom: spacing['2'],
-                }}>
-                  Rating
-                </Text>
-                <PassionFruitRating value={rating} onChange={setRating} size={28} />
-              </View>
-            )}
-
-            {/* Passion selector — stub */}
-            <View>
-              <Text style={{
-                fontSize: fontSizes.sm,
-                fontWeight: fontWeights.medium,
-                color: colors.textSecondary,
-                marginBottom: spacing['1'],
-              }}>
-                Passion
-              </Text>
-              <TouchableOpacity
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: spacing['3'],
-                  backgroundColor: colors.surface,
-                  borderRadius: radii.md,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-                activeOpacity={0.7}
-              >
-                <Text style={{
-                  fontSize: fontSizes.md,
-                  color: passionId ? colors.textPrimary : colors.textDisabled,
-                }}>
-                  {passionId ?? 'Select a passion (optional)'}
-                </Text>
-                <Text style={{ color: colors.textDisabled }}>▾</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Visibility */}
-            <View>
-              <Text style={{
-                fontSize: fontSizes.sm,
-                fontWeight: fontWeights.medium,
-                color: colors.textSecondary,
-                marginBottom: spacing['1'],
-              }}>
-                Visibility
-              </Text>
-              <SegmentToggle<Visibility>
-                options={[
-                  { value: 'public',  label: 'Public'  },
-                  { value: 'private', label: 'Private' },
-                ]}
-                value={visibility}
-                onChange={setVisibility}
-              />
-            </View>
-
-            {/* Comments toggle — only when public */}
-            {visibility === 'public' && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: fontSizes.md, color: colors.textPrimary }}>
-                  Allow comments
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setCommentsEnabled(v => !v)}
-                  style={{
-                    width: 46,
-                    height: 26,
-                    borderRadius: 13,
-                    backgroundColor: commentsEnabled ? colors.primary : colors.border,
-                    justifyContent: 'center',
-                    paddingHorizontal: 3,
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <View style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 10,
-                    backgroundColor: colors.textInverse,
-                    alignSelf: commentsEnabled ? 'flex-end' : 'flex-start',
+            {/* Dot indicators */}
+            {previewUris.length > 1 && (
+              <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: spacing['2'] }}>
+                {previewUris.map((_, i) => (
+                  <View key={i} style={{
+                    width: i === previewIndex ? 16 : 6,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: i === previewIndex ? colors.primary : colors.border,
+                    marginHorizontal: 2,
                   }} />
-                </TouchableOpacity>
+                ))}
               </View>
-            )}
-
-            {/* Photo — only when review */}
-            {isReview && (
-              <TouchableOpacity
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: spacing['2'],
-                  padding: spacing['3'],
-                  backgroundColor: colors.surface,
-                  borderRadius: radii.md,
-                  borderWidth: 1,
-                  borderColor: mediaUrls.length > 0 ? colors.primary : colors.border,
-                }}
-                activeOpacity={0.7}
-                onPress={handlePickPhoto}
-              >
-                <Camera size={20} color={mediaUrls.length > 0 ? colors.primary : colors.textSecondary} />
-                <Text style={{
-                  flex: 1,
-                  fontSize: fontSizes.md,
-                  color: mediaUrls.length > 0 ? colors.primary : colors.textSecondary,
-                }}>
-                  {mediaUrls.length > 0 ? 'Photo added  ✓' : 'Add photo'}
-                </Text>
-                {mediaUrls.length > 0 && (
-                  <TouchableOpacity
-                    onPress={() => { setMediaUrls([]); setMediaBase64(null); }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <X size={14} color={colors.textSecondary} />
-                  </TouchableOpacity>
-                )}
-              </TouchableOpacity>
             )}
           </View>
-        </ScrollView>
+        )}
+
+        {/* ── Bottom toolbar ─────────────────────────────────────────────────── */}
+        <View style={{
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          paddingHorizontal: spacing['4'],
+          paddingVertical: spacing['3'],
+          gap: spacing['4'],
+        }}>
+          {/* Media pickers */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['5'] }}>
+            <TouchableOpacity
+              onPress={() => pickMedia('photo')}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2'] }}
+              disabled={previewUris.length >= MAX_MEDIA}
+            >
+              <Images size={22} color={previewUris.length >= MAX_MEDIA ? colors.textDisabled : colors.textSecondary} />
+              <Text style={{ fontSize: fontSizes.sm, color: colors.textSecondary }}>Photo</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => pickMedia('video')}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2'] }}
+              disabled={previewUris.length >= MAX_MEDIA}
+            >
+              <Video size={22} color={previewUris.length >= MAX_MEDIA ? colors.textDisabled : colors.textSecondary} />
+              <Text style={{ fontSize: fontSizes.sm, color: colors.textSecondary }}>Video</Text>
+            </TouchableOpacity>
+
+            {previewUris.length > 0 && (
+              <Text style={{ fontSize: fontSizes.xs, color: colors.textDisabled, marginLeft: 'auto' }}>
+                {previewUris.length}/{MAX_MEDIA}
+              </Text>
+            )}
+          </View>
+
+          {/* Post / Review + Visibility row */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['3'] }}>
+            {/* Post / Review pill toggle */}
+            <View style={{
+              flexDirection: 'row',
+              backgroundColor: colors.surface,
+              borderRadius: radii.full,
+              borderWidth: 1,
+              borderColor: colors.border,
+              padding: 3,
+            }}>
+              {(['post', 'review'] as PostType[]).map(opt => (
+                <TouchableOpacity
+                  key={opt}
+                  onPress={() => setPostType(opt)}
+                  style={{
+                    paddingHorizontal: spacing['4'],
+                    paddingVertical: spacing['1'],
+                    borderRadius: radii.full,
+                    backgroundColor: postType === opt ? colors.primary : 'transparent',
+                  }}
+                >
+                  <Text style={{
+                    fontSize: fontSizes.sm,
+                    fontWeight: fontWeights.medium,
+                    color: postType === opt ? '#fff' : colors.textSecondary,
+                    textTransform: 'capitalize',
+                  }}>
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Visibility toggle */}
+            <TouchableOpacity
+              onPress={() => setVisibility(v => v === 'public' ? 'private' : 'public')}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing['1'],
+                paddingHorizontal: spacing['3'],
+                paddingVertical: spacing['2'],
+                borderRadius: radii.full,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              {visibility === 'public'
+                ? <Globe size={14} color={colors.textSecondary} />
+                : <Lock size={14} color={colors.textSecondary} />
+              }
+              <Text style={{ fontSize: fontSizes.sm, color: colors.textSecondary, textTransform: 'capitalize' }}>
+                {visibility}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+};
+
+// Inline helper to avoid importing StyleSheet just for absoluteFill
+const StyleSheet_absoluteFill = {
+  position: 'absolute' as const,
+  top: 0, left: 0, right: 0, bottom: 0,
 };
 
 export default CreatePostScreen;

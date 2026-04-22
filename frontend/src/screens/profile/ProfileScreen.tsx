@@ -11,6 +11,8 @@ import { Avatar } from '../../components/common/Avatar';
 import { Button } from '../../components/common/Button';
 import { passionApi, PassionListItem } from '../../api/passionApi';
 import { getMe, UserProfile } from '../../api/userApi';
+import BottomNavBar from '../../components/layout/BottomNavBar';
+import FloatingActionButton from '../../components/layout/FloatingActionButton';
 
 type ProfileNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -97,6 +99,7 @@ const ProfileScreen = () => {
   const { isLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [passions, setPassions] = useState<PassionListItem[]>([]);
+  const [fabVisible, setFabVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -112,7 +115,7 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <View style={{ flex: 1, paddingHorizontal: spacing['4'], paddingTop: spacing['4'], paddingBottom: spacing['4'] }}>
 
           {/* ── Top bar ── */}
@@ -208,6 +211,17 @@ const ProfileScreen = () => {
           <PostsGrid />
         </View>
       </ScrollView>
+
+      <BottomNavBar
+        activeRoute="ProfileScreen"
+        onAddPress={() => setFabVisible(v => !v)}
+      />
+
+      <FloatingActionButton
+        visible={fabVisible}
+        onClose={() => setFabVisible(false)}
+        position="right"
+      />
     </SafeAreaView>
   );
 };

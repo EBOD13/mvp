@@ -159,7 +159,7 @@ const renderPassion: ListRenderItem<Passion> = ({ item }) => (
       memberCount: item.memberCount,
       category: item.category,
       isJoined: item.membershipStatus === 'member',
-      coverImageUrl: item.coverImageUrl,
+      coverUrl: item.coverUrl,
       coverColor: item.coverColor,
     }}
     onPress={() =>
@@ -295,8 +295,8 @@ const renderPassion: ListRenderItem<Passion> = ({ item }) => (
                   numColumns={2}
                   columnWrapperStyle={{
                     paddingHorizontal: spacing['4'],
-                    justifyContent: 'space-between',
-                    marginBottom: spacing['3'],
+                    gap: spacing['3'],
+                    marginBottom: spacing['4'],
                   }}
                   contentContainerStyle={{
                     paddingBottom: spacing['8'],

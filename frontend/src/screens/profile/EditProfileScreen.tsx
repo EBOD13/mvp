@@ -3,19 +3,21 @@ import {
   View,
   Text,
   ScrollView,
+  TextInput,
+  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
+  ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { ChevronLeft, Camera } from 'lucide-react-native';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
-import { Input } from '../../components/common/Input';
-import { Button } from '../../components/common/Button';
 import { Avatar } from '../../components/common/Avatar';
 import { getMe, updateMe } from '../../api/userApi';
 import { supabase } from '../../lib/supabase';
@@ -24,7 +26,7 @@ type Nav = StackNavigationProp<RootStackParamList, 'EditProfileScreen'>;
 
 const EditProfileScreen = () => {
   const navigation = useNavigation<Nav>();
-  const { colors, spacing, radii, textVariants } = useTheme();
+  const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
   const { userId } = useAuth();
 
   const [displayName,  setDisplayName]  = useState('');
@@ -32,15 +34,19 @@ const EditProfileScreen = () => {
   const [bio,          setBio]          = useState('');
   const [avatarUri,    setAvatarUri]    = useState<string | null>(null);
   const [avatarBase64, setAvatarBase64] = useState<{ base64: string; ext: string } | null>(null);
+  const [loading,      setLoading]      = useState(true);
   const [saving,       setSaving]       = useState(false);
 
   useEffect(() => {
-    getMe().then(me => {
-      setDisplayName(me.display_name ?? '');
-      setUsername(me.username ?? '');
-      setBio(me.bio ?? '');
-      setAvatarUri(me.avatar_url ?? null);
-    }).catch(() => {});
+    getMe()
+      .then(me => {
+        setDisplayName(me.display_name ?? '');
+        setUsername(me.username ?? '');
+        setBio(me.bio ?? '');
+        setAvatarUri(me.avatar_url ?? null);
+      })
+      .catch(() => Alert.alert('Error', 'Could not load profile.'))
+      .finally(() => setLoading(false));
   }, []);
 
   const handlePickPhoto = async () => {
@@ -78,17 +84,12 @@ const EditProfileScreen = () => {
     }
     setSaving(true);
     try {
-      let newAvatarUrl: string | null | undefined;
-      if (avatarBase64) {
-        newAvatarUrl = await uploadAvatar();
-      }
-
+      const newAvatarUrl = avatarBase64 ? await uploadAvatar() : undefined;
       await updateMe({
         display_name: displayName.trim(),
         bio: bio.trim() || null,
         ...(newAvatarUrl ? { avatar_url: newAvatarUrl } : {}),
       });
-
       navigation.goBack();
     } catch (err: any) {
       Alert.alert('Error', err?.message ?? 'Failed to save changes.');
@@ -97,103 +98,153 @@ const EditProfileScreen = () => {
     }
   };
 
-  const SectionLabel = ({ children }: { children: string }) => (
-    <Text style={[textVariants.caption as any, {
-      color: colors.textSecondary,
-      textTransform: 'uppercase',
-      letterSpacing: 0.8,
-      marginBottom: spacing['2'],
-    }]}>
-      {children}
-    </Text>
-  );
+  const canSave = displayName.trim().length > 0 && !saving;
+
+  const fieldStyle = {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing['4'],
+    paddingVertical: spacing['3'],
+    fontSize: fontSizes.md,
+    color: colors.textPrimary,
+  };
+
+  const labelStyle = {
+    fontSize: fontSizes.xs,
+    fontWeight: fontWeights.semibold,
+    color: colors.textSecondary,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.8,
+    marginBottom: spacing['2'],
+  };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <View style={{ flex: 1, paddingHorizontal: spacing['4'], paddingVertical: spacing['4'] }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
 
-          {/* Header */}
-          <Text style={[textVariants.h2 as any, { color: colors.textPrimary, marginBottom: spacing['6'] }]}>
+        {/* ── Header ── */}
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: spacing['4'],
+          paddingVertical: spacing['3'],
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <ChevronLeft size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+
+          <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.textPrimary }}>
             Edit Profile
           </Text>
 
-          {/* Avatar */}
-          <View style={{ alignItems: 'center', marginBottom: spacing['6'] }}>
-            <Avatar uri={avatarUri} name={displayName} size="xl" style={{ marginBottom: spacing['3'] }} />
-            <Pressable onPress={handlePickPhoto}>
-              <Text style={[textVariants.body as any, { color: colors.primary }]}>Change Photo</Text>
-            </Pressable>
-            {avatarBase64 && (
-              <Pressable onPress={() => { setAvatarUri(null); setAvatarBase64(null); }} style={{ marginTop: spacing['1'] }}>
-                <Text style={[textVariants.caption as any, { color: colors.textSecondary }]}>Remove</Text>
-              </Pressable>
-            )}
-          </View>
+          <TouchableOpacity
+            onPress={handleSave}
+            disabled={!canSave}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            {saving
+              ? <ActivityIndicator size="small" color={colors.primary} />
+              : <Text style={{
+                  fontSize: fontSizes.md,
+                  fontWeight: fontWeights.semibold,
+                  color: canSave ? colors.primary : colors.textDisabled,
+                }}>Save</Text>
+            }
+          </TouchableOpacity>
+        </View>
 
-          {/* Display Name */}
-          <View style={{ marginBottom: spacing['4'] }}>
-            <SectionLabel>Display Name</SectionLabel>
-            <Input
-              value={displayName}
-              onChangeText={setDisplayName}
-              placeholder="Your name"
-              autoCapitalize="words"
-            />
+        {loading ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={colors.primary} />
           </View>
+        ) : (
+          <ScrollView
+            contentContainerStyle={{ padding: spacing['6'] }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ── Avatar ── */}
+            <View style={{ alignItems: 'center', marginBottom: spacing['8'] }}>
+              <View style={{ position: 'relative' }}>
+                <Avatar uri={avatarUri} name={displayName} size="xl" />
+                <TouchableOpacity
+                  onPress={handlePickPhoto}
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: 30,
+                    height: 30,
+                    borderRadius: 15,
+                    backgroundColor: colors.primary,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 2,
+                    borderColor: colors.background,
+                  }}
+                >
+                  <Camera size={14} color="#fff" />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity onPress={handlePickPhoto} style={{ marginTop: spacing['3'] }}>
+                <Text style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.medium, color: colors.primary }}>
+                  Change Photo
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-          {/* Username (read-only for now) */}
-          <View style={{ marginBottom: spacing['4'] }}>
-            <SectionLabel>Username</SectionLabel>
-            <View style={{
-              paddingHorizontal: spacing['3'],
-              paddingVertical: spacing['3'],
-              backgroundColor: colors.surface,
-              borderRadius: radii.md,
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}>
-              <Text style={[textVariants.body as any, { color: colors.textSecondary }]}>
-                @{username}
+            {/* ── Display Name ── */}
+            <View style={{ marginBottom: spacing['5'] }}>
+              <Text style={labelStyle}>Display Name</Text>
+              <TextInput
+                style={fieldStyle}
+                value={displayName}
+                onChangeText={setDisplayName}
+                placeholder="Your name"
+                placeholderTextColor={colors.textDisabled}
+                autoCapitalize="words"
+                returnKeyType="next"
+              />
+            </View>
+
+            {/* ── Username (read-only) ── */}
+            <View style={{ marginBottom: spacing['5'] }}>
+              <Text style={labelStyle}>Username</Text>
+              <View style={[fieldStyle, { backgroundColor: colors.surface }]}>
+                <Text style={{ fontSize: fontSizes.md, color: colors.textDisabled }}>
+                  @{username}
+                </Text>
+              </View>
+              <Text style={{ fontSize: fontSizes.xs, color: colors.textDisabled, marginTop: spacing['1'] }}>
+                Username changes are not available yet
               </Text>
             </View>
-            <Text style={[textVariants.caption as any, { color: colors.textSecondary, marginTop: spacing['1'] }]}>
-              Username changes coming soon
-            </Text>
-          </View>
 
-          {/* Bio */}
-          <View style={{ marginBottom: spacing['6'] }}>
-            <SectionLabel>Bio</SectionLabel>
-            <Input
-              value={bio}
-              onChangeText={setBio}
-              placeholder="Tell people about yourself…"
-              multiline
-              numberOfLines={3}
-            />
-          </View>
-
-          {/* Actions */}
-          <Button
-            label={saving ? 'Saving…' : 'Save Changes'}
-            onPress={handleSave}
-            variant="primary"
-            size="md"
-            style={{ marginBottom: spacing['3'] }}
-          />
-          <Button
-            label="Cancel"
-            onPress={() => navigation.goBack()}
-            variant="ghost"
-            size="md"
-          />
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            {/* ── Bio ── */}
+            <View style={{ marginBottom: spacing['5'] }}>
+              <Text style={labelStyle}>Bio</Text>
+              <TextInput
+                style={[fieldStyle, { minHeight: 90, textAlignVertical: 'top' }]}
+                value={bio}
+                onChangeText={setBio}
+                placeholder="Tell people about yourself…"
+                placeholderTextColor={colors.textDisabled}
+                multiline
+                numberOfLines={4}
+              />
+            </View>
+          </ScrollView>
+        )}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

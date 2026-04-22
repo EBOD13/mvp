@@ -15,7 +15,7 @@ export type PassionCardData = {
   memberCount: number;
   category: string;
   isJoined?: boolean;
-  coverImageUrl?: string | null;
+  coverUrl?: string | null;
   coverColor?: string;
 };
 
@@ -43,6 +43,8 @@ const PassionCard: React.FC<PassionCardProps> = ({
     shadows,
   } = useTheme();
 
+  const RADIUS = radii['2xl'];
+
   const s = {
     pressable: {
       flex: 1,
@@ -50,23 +52,21 @@ const PassionCard: React.FC<PassionCardProps> = ({
     card: {
       flex: 1,
       backgroundColor: colors.surface,
-      borderRadius: radii.lg,
-      borderWidth: 1,
-      borderColor: colors.border,
+      borderRadius: RADIUS,
       overflow: 'hidden' as const,
       ...shadows.md,
     },
     banner: {
-      height: 86,
+      height: 100,
       backgroundColor: passion.coverColor ?? colors.primarySubtle,
     },
     bannerImage: {
-      borderTopLeftRadius: radii.lg,
-      borderTopRightRadius: radii.lg,
+      borderTopLeftRadius: RADIUS,
+      borderTopRightRadius: RADIUS,
     },
     bannerOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.10)',
+      backgroundColor: 'rgba(0,0,0,0.08)',
     },
     content: {
       paddingHorizontal: spacing['3'],
@@ -166,7 +166,7 @@ const PassionCard: React.FC<PassionCardProps> = ({
     >
       <View style={s.card}>
         <ImageBackground
-          source={passion.coverImageUrl ? { uri: passion.coverImageUrl } : undefined}
+          source={passion.coverUrl ? { uri: passion.coverUrl } : undefined}
           style={s.banner}
           imageStyle={s.bannerImage}
         >

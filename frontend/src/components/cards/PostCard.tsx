@@ -1,12 +1,14 @@
 // src/components/cards/PostCard.tsx
-import React from 'react';
-import { View, Text, TouchableOpacity, Alert, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert, Image, FlatList, Dimensions } from 'react-native';
 import { MessageCircle, Bookmark, Ellipsis } from 'lucide-react-native';
 import PassionFruitLike from '../icons/PassionFruitLike';
 import PassionFruitRating from '../icons/PassionFruitRating';
 import { useTheme } from '../../theme';
 import { Avatar } from '../common/Avatar';
 import { PostResponse } from '../../types/feed';
+
+const SCREEN_W = Dimensions.get('window').width;
 
 export type PostCardProps = {
   post: PostResponse;
@@ -32,6 +34,8 @@ const PostCard: React.FC<PostCardProps> = ({
   onDeletePress,
 }) => {
   const { colors, spacing, fontSizes, fontWeights, lineHeights, radii, shadows } = useTheme();
+
+  const [mediaIndex, setMediaIndex] = useState(0);
 
   const showOptionsMenu = onEditPress !== undefined || onDeletePress !== undefined;
 
@@ -177,20 +181,59 @@ const PostCard: React.FC<PostCardProps> = ({
       {/* ── Post body ───────────────────────────────────────────────────── */}
       <Text style={s.content}>{post.content}</Text>
 
-      {/* ── Media ───────────────────────────────────────────────────────── */}
-      {post.media_urls && post.media_urls.length > 0 && (
-        <Image
-          source={{ uri: post.media_urls[0] }}
-          style={{
-            width: '100%',
-            aspectRatio: 4 / 3,
-            borderRadius: radii.md,
-            marginBottom: spacing['3'],
-            backgroundColor: colors.border,
-          }}
-          resizeMode="cover"
-        />
-      )}
+      {/* ── Media carousel ──────────────────────────────────────────────── */}
+      {post.media_urls && post.media_urls.length > 0 && (() => {
+        const GAP = 8;
+        const CARD_W = SCREEN_W - spacing['4'] * 2 - spacing['4'] * 2;
+        const STEP = CARD_W + GAP;
+        const urls = post.media_urls;
+        return (
+          <View style={{ marginBottom: spacing['3'] }}>
+            <FlatList
+              data={urls}
+              keyExtractor={(_, i) => String(i)}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              bounces={false}
+              snapToInterval={STEP}
+              decelerationRate="fast"
+              onMomentumScrollEnd={e => {
+                const idx = Math.round(e.nativeEvent.contentOffset.x / STEP);
+                setMediaIndex(idx);
+              }}
+              getItemLayout={(_, index) => ({ length: STEP, offset: STEP * index, index })}
+              renderItem={({ item, index }) => (
+                <Image
+                  source={{ uri: item }}
+                  style={{
+                    width: CARD_W,
+                    aspectRatio: 4 / 3,
+                    borderRadius: radii.md,
+                    backgroundColor: colors.border,
+                    marginRight: index < urls.length - 1 ? GAP : 0,
+                  }}
+                  resizeMode="cover"
+                />
+              )}
+            />
+            {urls.length > 1 && (
+              <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: spacing['2'], gap: 4 }}>
+                {urls.map((_, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      width: i === mediaIndex ? 16 : 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: i === mediaIndex ? colors.primary : colors.border,
+                    }}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        );
+      })()}
 
       {/* ── Action row ──────────────────────────────────────────────────── */}
       <View style={s.actions}>

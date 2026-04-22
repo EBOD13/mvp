@@ -3,7 +3,7 @@ import React from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { enableScreens } from 'react-native-screens';
 
 import { AuthProvider } from './src/context/AuthContext';
@@ -21,7 +21,7 @@ import HomeFeedScreen      from './src/screens/feed/HomeFeedScreen';
 import CreatePostScreen    from './src/screens/feed/CreatePostScreen';
 import ProfileScreen       from './src/screens/profile/ProfileScreen';
 import EditProfileScreen   from './src/screens/profile/EditProfileScreen';
-import CreatePassionScreen from './src/screens/stub/CreatePassionScreen';
+import CreatePassionScreen from './src/screens/passions/CreatePassionScreen';
 import OtherUserScreen     from './src/screens/stub/OtherUserScreen';
 import PassionsListScreen  from './src/screens/passions/PassionsListScreen';
 import SettingsScreen      from './src/screens/settings/SettingsScreen';
@@ -54,15 +54,25 @@ function AppNavigator() {
           {session ? (
             // ── Authenticated stack ──────────────────────────────────────
             <>
-              <Stack.Screen name="HomeFeedScreen"      component={HomeFeedScreen} />
-              <Stack.Screen name="DiscoverScreen"      component={DiscoverScreen} />
-              <Stack.Screen name="ProfileScreen"       component={ProfileScreen} />
+              {/* Tab screens — instant switch, no slide */}
+              <Stack.Screen name="HomeFeedScreen" component={HomeFeedScreen}
+                options={{ cardStyleInterpolator: () => ({}) }} />
+              <Stack.Screen name="DiscoverScreen" component={DiscoverScreen}
+                options={{ cardStyleInterpolator: () => ({}) }} />
+              <Stack.Screen name="ProfileScreen"  component={ProfileScreen}
+                options={{ cardStyleInterpolator: () => ({}) }} />
+
+              {/* Modal screens — slide up from bottom */}
+              <Stack.Screen name="CreatePostScreen"    component={CreatePostScreen}
+                options={{ cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS, gestureEnabled: true }} />
+              <Stack.Screen name="CreatePassionScreen" component={CreatePassionScreen}
+                options={{ cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS, gestureEnabled: true }} />
+
+              {/* Detail screens — default slide from right */}
               <Stack.Screen name="PassionsListScreen"  component={PassionsListScreen} />
               <Stack.Screen name="SettingsScreen"      component={SettingsScreen} />
               <Stack.Screen name="PhriendsListScreen"  component={PhriendsListScreen} />
               <Stack.Screen name="PassionDetailScreen" component={PassionDetailScreen} />
-              <Stack.Screen name="CreatePostScreen"    component={CreatePostScreen} />
-              <Stack.Screen name="CreatePassionScreen" component={CreatePassionScreen} />
               <Stack.Screen name="OtherUserScreen"     component={OtherUserScreen} />
               <Stack.Screen name="EditProfileScreen"   component={EditProfileScreen} />
             </>

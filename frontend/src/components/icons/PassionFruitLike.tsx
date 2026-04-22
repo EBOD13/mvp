@@ -67,7 +67,7 @@ const PassionFruitLike: React.FC<PassionFruitLikeProps> = ({
         <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden' }}>
           {/* Whole fruit */}
           <Animated.View style={{ position: 'absolute', width: size, height: size, opacity: wholeOpacity }}>
-            <WholeFruitSVG size={size} />
+            <WholeFruitSVG size={size} gray={!liked} />
           </Animated.View>
 
           {/* Cut fruit */}

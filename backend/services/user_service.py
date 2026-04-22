@@ -22,7 +22,5 @@ async def update_me(user_id: str, data: UpdateProfileRequest) -> UserProfile:
     updates = data.model_dump(exclude_none=True)
     if not updates:
         return await get_me(user_id)
-    result = supabase.table("users").update(updates).eq("id", user_id).select().execute()
-    if not result.data:
-        return await get_me(user_id)
-    return UserProfile(**result.data[0])
+    supabase.table("users").update(updates).eq("id", user_id).execute()
+    return await get_me(user_id)
