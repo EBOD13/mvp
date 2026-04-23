@@ -16,24 +16,25 @@ from schemas.post_schema import PostCreate, PostUpdate, PostResponse, CommentCre
 
 
 async def _hydrate_post(post: dict, user_id: UUID) -> PostResponse:
-    author = (
+    author_result = (
         supabase.table("users")
         .select("display_name, username")
         .eq("id", post["author_id"])
-        .maybeSingle()
+        .limit(1)
         .execute()
     )
+    author_data = author_result.data[0] if author_result.data else None
 
     passion_name = None
     if post.get("passion_id"):
-        passion = (
+        passion_result = (
             supabase.table("passions")
             .select("name")
             .eq("id", post["passion_id"])
-            .maybeSingle()
+            .limit(1)
             .execute()
         )
-        passion_name = passion.data.get("name") if passion.data else None
+        passion_name = passion_result.data[0].get("name") if passion_result.data else None
 
     like_check = (
         supabase.table("post_likes")
@@ -50,8 +51,8 @@ async def _hydrate_post(post: dict, user_id: UUID) -> PostResponse:
         .execute()
     )
 
-    post["author_name"] = author.data.get("display_name") if author.data else "Unknown"
-    post["author_username"] = f"@{author.data.get('username')}" if author.data else "@unknown"
+    post["author_name"] = author_data.get("display_name") if author_data else "Unknown"
+    post["author_username"] = f"@{author_data.get('username')}" if author_data else "@unknown"
     post["passion_name"] = passion_name
     post["visibility"] = post.get("visibility") or "public"
     post["comments_enabled"] = post.get("comments_enabled", True)
@@ -331,13 +332,14 @@ async def unsave_post(post_id: UUID, user_id: UUID) -> None:
 # ──────────────────────────────────────────────
 
 async def _hydrate_comment(comment: dict, user_id: UUID) -> CommentResponse:
-    author = (
+    author_result = (
         supabase.table("users")
         .select("display_name, username")
         .eq("id", comment["author_id"])
-        .maybeSingle()
+        .limit(1)
         .execute()
     )
+    author_data = author_result.data[0] if author_result.data else None
     like_check = (
         supabase.table("comment_likes")
         .select("user_id")
@@ -345,8 +347,8 @@ async def _hydrate_comment(comment: dict, user_id: UUID) -> CommentResponse:
         .eq("user_id", str(user_id))
         .execute()
     )
-    comment["author_name"] = author.data.get("display_name", "") if author.data else ""
-    comment["author_username"] = f"@{author.data.get('username', '')}" if author.data else ""
+    comment["author_name"] = author_data.get("display_name", "") if author_data else ""
+    comment["author_username"] = f"@{author_data.get('username', '')}" if author_data else ""
     comment["is_liked"] = len(like_check.data) > 0
     return CommentResponse(**comment)
 

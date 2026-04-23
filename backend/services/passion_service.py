@@ -245,7 +245,7 @@ async def create_passion(user_id: str, data: PassionCreate) -> PassionResponse:
 async def get_passion(passion_id: str, user_id: str) -> PassionResponse:
     result = supabase.table("passions").select(
         "id, name, description, category, visibility, join_type, cover_url, member_count, owner_id, created_at"
-    ).eq("id", passion_id).single().execute()
+    ).eq("id", passion_id).limit(1).execute()
 
     if not result.data:
         raise NotFoundError("Passion not found")

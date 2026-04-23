@@ -33,10 +33,10 @@ async def login(data: LoginRequest) -> AuthResponse:
     if "@" in data.identifier:
         email = data.identifier
     else:
-        result = supabase.table("users").select("email").eq("username", data.identifier).single().execute()
+        result = supabase.table("users").select("email").eq("username", data.identifier).limit(1).execute()
         if not result.data:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-        email = result.data["email"]
+        email = result.data[0]["email"]
 
     # 2. Sign in with email + password
     try:
