@@ -20,7 +20,7 @@ async def _hydrate_post(post: dict, user_id: UUID) -> PostResponse:
         supabase.table("users")
         .select("display_name, username")
         .eq("id", post["author_id"])
-        .single()
+        .maybeSingle()
         .execute()
     )
 
@@ -30,7 +30,7 @@ async def _hydrate_post(post: dict, user_id: UUID) -> PostResponse:
             supabase.table("passions")
             .select("name")
             .eq("id", post["passion_id"])
-            .single()
+            .maybeSingle()
             .execute()
         )
         passion_name = passion.data.get("name") if passion.data else None
@@ -121,59 +121,70 @@ async def get_feed(
     """
     user_id_str = str(user_id)
 
-    if filter == "passions":
-        passions = (
-            supabase.table("passion_members")
-            .select("passion_id")
-            .eq("user_id", user_id_str)
-            .execute()
-        )
-        passion_ids = [row["passion_id"] for row in passions.data]
-        if not passion_ids:
-            return []
+    try:
+        if filter == "passions":
+            passions = (
+                supabase.table("passion_members")
+                .select("passion_id")
+                .eq("user_id", user_id_str)
+                .execute()
+            )
+            passion_ids = [row["passion_id"] for row in passions.data]
+            if not passion_ids:
+                return []
 
-        row = (
-            supabase.table("posts")
-            .select("*")
-            .in_("passion_id", passion_ids)
-            .order("created_at", desc=True)
-            .range(offset, offset + limit - 1)
-            .execute()
-        )
-    else:
-        phriends = (
-            supabase.table("phriendships")
-            .select("requester_id, addressee_id")
-            .eq("status", "accepted")
-            .or_(f"requester_id.eq.{user_id_str},addressee_id.eq.{user_id_str}")
-            .execute()
-        )
+            row = (
+                supabase.table("posts")
+                .select("*")
+                .in_("passion_id", passion_ids)
+                .order("created_at", desc=True)
+                .range(offset, offset + limit - 1)
+                .execute()
+            )
+        else:
+            # Two queries to avoid .or_() which is fragile on cold-start
+            as_requester = (
+                supabase.table("phriendships")
+                .select("addressee_id")
+                .eq("status", "accepted")
+                .eq("requester_id", user_id_str)
+                .execute()
+            )
+            as_addressee = (
+                supabase.table("phriendships")
+                .select("requester_id")
+                .eq("status", "accepted")
+                .eq("addressee_id", user_id_str)
+                .execute()
+            )
 
-        author_ids = {user_id_str}
-        for p in phriends.data:
-            if p["requester_id"] == user_id_str:
+            author_ids = {user_id_str}
+            for p in as_requester.data or []:
                 author_ids.add(p["addressee_id"])
-            elif p["addressee_id"] == user_id_str:
+            for p in as_addressee.data or []:
                 author_ids.add(p["requester_id"])
 
-        row = (
-            supabase.table("posts")
-            .select("*")
-            .in_("author_id", list(author_ids))
-            .order("created_at", desc=True)
-            .range(offset, offset + limit - 1)
-            .execute()
-        )
+            row = (
+                supabase.table("posts")
+                .select("*")
+                .in_("author_id", list(author_ids))
+                .order("created_at", desc=True)
+                .range(offset, offset + limit - 1)
+                .execute()
+            )
 
-    visible_posts = [
-        post for post in row.data
-        if (post.get("visibility") or "public") == "public" or post["author_id"] == user_id_str
-    ]
+        visible_posts = [
+            post for post in row.data
+            if (post.get("visibility") or "public") == "public" or post["author_id"] == user_id_str
+        ]
 
-    hydrated: list[PostResponse] = []
-    for post in visible_posts:
-        hydrated.append(await _hydrate_post(post, user_id))
-    return hydrated
+        hydrated: list[PostResponse] = []
+        for post in visible_posts:
+            hydrated.append(await _hydrate_post(post, user_id))
+        return hydrated
+
+    except Exception:
+        return []
 
 
 async def update_post(post_id: UUID, user_id: UUID, data: PostUpdate) -> PostResponse:
@@ -197,14 +208,8 @@ async def update_post(post_id: UUID, user_id: UUID, data: PostUpdate) -> PostRes
     update_data = data.model_dump(exclude_unset=True)
     update_data["updated_at"] = "now()"  # Refresh the timestamp
 
-    row = (
-        supabase.table("posts")
-        .update(update_data)
-        .eq("id", str(post_id))
-        .execute()
-    )
-
-    return await _hydrate_post(row.data[0], user_id)
+    supabase.table("posts").update(update_data).eq("id", str(post_id)).execute()
+    return await get_post(post_id, user_id)
 
 
 async def delete_post(post_id: UUID, user_id: UUID) -> None:
@@ -310,7 +315,7 @@ async def _hydrate_comment(comment: dict, user_id: UUID) -> CommentResponse:
         supabase.table("users")
         .select("display_name, username")
         .eq("id", comment["author_id"])
-        .single()
+        .maybeSingle()
         .execute()
     )
     like_check = (

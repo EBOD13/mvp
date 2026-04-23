@@ -4,7 +4,8 @@
       "Bash(mvp/bin/pip install:*)",
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
-      "Bash(pod install *)"
+      "Bash(pod install *)",
+      "Bash(pip show *)"
     ],
     "additionalDirectories": [
       "/Users/ebod/Projects/mvp/frontend/src"
