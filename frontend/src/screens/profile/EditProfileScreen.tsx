@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ChevronLeft, Camera } from 'lucide-react-native';
+import { ChevronLeft, Camera, Music } from 'lucide-react-native';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
@@ -240,6 +240,25 @@ const EditProfileScreen = () => {
                 multiline
                 numberOfLines={4}
               />
+            </View>
+
+            {/* ── Profile Song ── */}
+            <View style={{ marginBottom: spacing['5'] }}>
+              <Text style={labelStyle}>Profile Song</Text>
+              <View style={{
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: radii.md,
+                padding: spacing['4'],
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Music size={16} color={colors.textDisabled} style={{ marginRight: spacing['2'] }} />
+                  <Text style={{ fontSize: fontSizes.sm, color: colors.textDisabled, flex: 1 }}>
+                    Profile song coming soon — MP3 upload not yet available.
+                  </Text>
+                </View>
+              </View>
             </View>
           </ScrollView>
         )}

@@ -176,6 +176,26 @@ async def get_feed(
     return hydrated
 
 
+async def get_user_posts(
+    user_id: UUID,
+    offset: int = 0,
+    limit: int = 20,
+) -> list[PostResponse]:
+    """Return a paginated list of the user's own posts, newest first."""
+    row = (
+        supabase.table("posts")
+        .select("*")
+        .eq("author_id", str(user_id))
+        .order("created_at", desc=True)
+        .range(offset, offset + limit - 1)
+        .execute()
+    )
+    hydrated: list[PostResponse] = []
+    for post in row.data:
+        hydrated.append(await _hydrate_post(post, user_id))
+    return hydrated
+
+
 async def update_post(post_id: UUID, user_id: UUID, data: PostUpdate) -> PostResponse:
     """
     Update a post. Only the original author is allowed to edit.

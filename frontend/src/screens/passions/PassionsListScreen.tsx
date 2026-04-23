@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Search } from 'lucide-react-native';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { EmptyState } from '../../components/common/EmptyState';
 import { passionApi, PassionListItem } from '../../api/passionApi';
+
+const CATEGORY_FILTERS = ['All', 'Movies', 'TV Shows', 'Books', 'Music'];
 
 type Navigation = StackNavigationProp<RootStackParamList, 'PassionsListScreen'>;
 type PassionsRoute = RouteProp<RootStackParamList, 'PassionsListScreen'>;
@@ -24,6 +26,8 @@ const PassionsListScreen: React.FC = () => {
   const [items, setItems] = useState<PassionListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
 
   const load = useCallback(async () => {
     try {
@@ -44,6 +48,13 @@ const PassionsListScreen: React.FC = () => {
       setLoading(false);
     })();
   }, [load]);
+
+  const filteredItems = items.filter(item => {
+    const matchesCategory = categoryFilter === 'All' ||
+      (item.category ?? '').toLowerCase() === categoryFilter.toLowerCase();
+    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -84,17 +95,76 @@ const PassionsListScreen: React.FC = () => {
         <Text style={[textVariants.h3 as any, { color: colors.textPrimary }]}>{screenTitle}</Text>
       </View>
 
+      {/* ── Search bar ── */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: spacing['4'],
+        marginTop: spacing['3'],
+        marginBottom: spacing['2'],
+        paddingHorizontal: spacing['3'],
+        paddingVertical: spacing['2'],
+        backgroundColor: colors.surface,
+        borderRadius: radii.md,
+        borderWidth: 1,
+        borderColor: colors.border,
+        gap: spacing['2'],
+      }}>
+        <Search size={16} color={colors.textSecondary} />
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search passions…"
+          placeholderTextColor={colors.textDisabled}
+          style={{ flex: 1, fontSize: 15, color: colors.textPrimary, paddingVertical: 0 }}
+          autoCorrect={false}
+          autoCapitalize="none"
+          clearButtonMode="while-editing"
+        />
+      </View>
+
+      {/* ── Category filter chips ── */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0, marginBottom: spacing['2'] }}
+        contentContainerStyle={{ paddingHorizontal: spacing['4'], gap: spacing['2'] }}
+      >
+        {CATEGORY_FILTERS.map(f => (
+          <Pressable
+            key={f}
+            onPress={() => setCategoryFilter(f)}
+            style={{
+              paddingHorizontal: spacing['3'],
+              paddingVertical: spacing['1'],
+              borderRadius: 20,
+              backgroundColor: categoryFilter === f ? colors.primary : colors.surface,
+              borderWidth: 1,
+              borderColor: categoryFilter === f ? colors.primary : colors.border,
+            }}
+          >
+            <Text style={{
+              fontSize: 13,
+              fontWeight: categoryFilter === f ? '600' : '400',
+              color: categoryFilter === f ? colors.textInverse : colors.textSecondary,
+            }}>
+              {f}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
         <FlatList
-          data={items}
+          data={filteredItems}
           keyExtractor={item => item.id}
           onRefresh={onRefresh}
           refreshing={refreshing}
-          contentContainerStyle={{ padding: spacing['4'], flexGrow: items.length === 0 ? 1 : 0 }}
+          contentContainerStyle={{ padding: spacing['4'], flexGrow: filteredItems.length === 0 ? 1 : 0 }}
           ListEmptyComponent={
             <EmptyState
               title="No passions yet"

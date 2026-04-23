@@ -106,6 +106,73 @@ async def remove_phriend(current_user_id: UUID, other_user_id: UUID) -> None:
     # Delete the accepted phriendship row in either direction
     supabase.table("phriendships").delete().eq("id", existing.data[0]["id"]).execute()
 
+BEST_PHRIENDS_LIMIT = 5
+
+
+async def get_best_phriends(user_id: UUID) -> list[PhriendResponse]:
+    rows = (
+        supabase.table("best_phriends")
+        .select("phriend_id")
+        .eq("user_id", str(user_id))
+        .execute()
+    )
+    phriends = []
+    for row in rows.data or []:
+        user_row = (
+            supabase.table("users")
+            .select("id, username, display_name, avatar_url")
+            .eq("id", row["phriend_id"])
+            .execute()
+        )
+        if user_row.data:
+            u = user_row.data[0]
+            phriends.append(PhriendResponse(
+                user_id=u["id"],
+                username=u["username"],
+                first_name=u["display_name"],
+                last_name="",
+                pronouns=None,
+                profile_photo_url=u.get("avatar_url"),
+            ))
+    return phriends
+
+
+async def get_best_phriend_ids(user_id: UUID) -> list[str]:
+    rows = (
+        supabase.table("best_phriends")
+        .select("phriend_id")
+        .eq("user_id", str(user_id))
+        .execute()
+    )
+    return [row["phriend_id"] for row in rows.data or []]
+
+
+async def add_best_phriend(user_id: UUID, other_user_id: UUID) -> None:
+    count_res = (
+        supabase.table("best_phriends")
+        .select("id", count="exact")
+        .eq("user_id", str(user_id))
+        .execute()
+    )
+    if (count_res.count or 0) >= BEST_PHRIENDS_LIMIT:
+        raise ForbiddenError(f"You can only have up to {BEST_PHRIENDS_LIMIT} Best Phriends")
+    try:
+        supabase.table("best_phriends").insert({
+            "user_id": str(user_id),
+            "phriend_id": str(other_user_id),
+        }).execute()
+    except Exception as e:
+        if "23505" in str(e):
+            return  # already best phriends, idempotent
+        raise
+
+
+async def remove_best_phriend(user_id: UUID, other_user_id: UUID) -> None:
+    supabase.table("best_phriends").delete().eq(
+        "user_id", str(user_id)
+    ).eq("phriend_id", str(other_user_id)).execute()
+
+
 async def get_phriends(user_id: UUID) -> list[PhriendResponse]:
     # Get accepted phriendship rows when user is either requester or addressee
     rows = (
