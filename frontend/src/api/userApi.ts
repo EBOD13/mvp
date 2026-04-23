@@ -24,3 +24,8 @@ export async function updateMe(data: {
   const response = await apiClient.patch<UserProfile>('/users/me', data);
   return response.data;
 }
+
+export async function getUserProfile(userId: string) {
+  const response = await apiClient.get<UserProfile>(`/users/${userId}`);
+  return response.data;
+}

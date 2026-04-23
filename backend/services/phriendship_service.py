@@ -222,8 +222,7 @@ async def get_pending_requests(user_id: UUID) -> list[PhriendRequestResponse]:
     )
     return [PhriendRequestResponse(**row) for row in rows.data]
 
-async def get_phriendship_status(current_user_id: UUID, other_user_id: UUID) -> str:
-    # Fetch phriendships
+async def get_phriendship_status(current_user_id: UUID, other_user_id: UUID) -> dict:
     rows = (
         supabase.table("phriendships")
         .select("*")
@@ -232,20 +231,19 @@ async def get_phriendship_status(current_user_id: UUID, other_user_id: UUID) -> 
             f"and(requester_id.eq.{other_user_id},addressee_id.eq.{current_user_id})"
         ).execute()
     )
-    # If there are no phriendships, return none
     if not rows.data:
-        return "none"
-    # Returns 'none' | 'pending_sent' | 'pending_received' | 'accepted'
-    # Used by OtherUserScreen to show the correct button state
-    row = rows.data[0]
+        return {"status": "none", "request_id": None}
 
+    row = rows.data[0]
     if row["status"] == "accepted":
-        return "accepted"
-    
+        return {"status": "accepted", "request_id": None}
     if row["status"] == "pending":
-        if row["requester_id"] == str(current_user_id):
-            return "pending_sent"
-        else:
-            return "pending_received"
-        
-    return "none"
+        status = "pending_sent" if row["requester_id"] == str(current_user_id) else "pending_received"
+        return {"status": status, "request_id": row["id"]}
+    return {"status": "none", "request_id": None}
+
+
+async def cancel_request(requester_id: UUID, addressee_id: UUID) -> None:
+    supabase.table("phriendships").delete().eq(
+        "requester_id", str(requester_id)
+    ).eq("addressee_id", str(addressee_id)).eq("status", "pending").execute()

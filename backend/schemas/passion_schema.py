@@ -42,6 +42,25 @@ class PassionDiscoverItem(BaseModel):
     is_favorite: bool = False
 
 
+class SubchannelCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+    @field_validator('name')
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError('Channel name cannot be empty')
+        return v.strip()
+
+
+class SubchannelListItem(BaseModel):
+    id: str
+    name: str
+    description: Optional[str] = None
+    passion_id: str
+
+
 class PassionResponse(BaseModel):
     id: UUID
     name: str

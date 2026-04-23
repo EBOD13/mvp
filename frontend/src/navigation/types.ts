@@ -22,4 +22,6 @@ export type RootStackParamList = {
   CreatePostScreen: { post?: PostResponse } | undefined;
   // Messages (new)
   DmConversationScreen: { otherUserId: string; otherUsername: string };
+  SubchannelScreen: { subchannelId: string; subchannelName: string; passionName: string };
+  PassionChannelsScreen: { passionId: string; passionName: string; accentColor: string };
 };

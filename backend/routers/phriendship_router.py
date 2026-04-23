@@ -61,3 +61,9 @@ async def get_pending_requests(current_user=Depends(get_current_user)):
 @router.get("/status/{other_user_id}")
 async def get_phriendship_status(other_user_id: UUID, current_user=Depends(get_current_user)):
     return await phriendship_service.get_phriendship_status(current_user.id, other_user_id)
+
+
+# Cancel an outgoing pending request
+@router.delete("/request/to/{other_user_id}", status_code=204)
+async def cancel_request(other_user_id: UUID, current_user=Depends(get_current_user)):
+    await phriendship_service.cancel_request(current_user.id, other_user_id)

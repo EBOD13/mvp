@@ -9,6 +9,22 @@ export interface PhriendItem {
   profile_photo_url: string | null;
 }
 
+export interface PhriendRequestItem {
+  id: string;
+  requester_id: string;
+  addressee_id: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PhriendshipStatus = 'none' | 'pending_sent' | 'pending_received' | 'accepted';
+
+export interface PhriendshipStatusResult {
+  status: PhriendshipStatus;
+  request_id: string | null;
+}
+
 export const phriendApi = {
   getPhriends: () => apiClient.get<PhriendItem[]>('/phriends/'),
 
@@ -24,4 +40,22 @@ export const phriendApi = {
 
   removeBestPhriend: (otherUserId: string) =>
     apiClient.delete(`/phriends/${otherUserId}/best`),
+
+  sendRequest: (addresseeId: string) =>
+    apiClient.post<PhriendRequestItem>('/phriends/request', { addressee_id: addresseeId }),
+
+  cancelRequest: (otherUserId: string) =>
+    apiClient.delete(`/phriends/request/to/${otherUserId}`),
+
+  acceptRequest: (requestId: string) =>
+    apiClient.patch<PhriendRequestItem>(`/phriends/${requestId}/accept`, {}),
+
+  declineRequest: (requestId: string) =>
+    apiClient.patch(`/phriends/${requestId}/decline`, {}),
+
+  getStatus: (otherUserId: string) =>
+    apiClient.get<PhriendshipStatusResult>(`/phriends/status/${otherUserId}`),
+
+  getPendingRequests: () =>
+    apiClient.get<PhriendRequestItem[]>('/phriends/requests/pending'),
 };

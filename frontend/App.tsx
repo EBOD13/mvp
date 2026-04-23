@@ -28,6 +28,10 @@ import SettingsScreen      from './src/screens/settings/SettingsScreen';
 import DiscoverScreen      from './src/screens/discover/DiscoverScreen';
 import PassionDetailScreen from './src/screens/passions/PassionDetailScreen';
 import PhriendsListScreen  from './src/screens/stub/PhriendsListScreen';
+import MessagesScreen      from './src/screens/social/MessagesScreen';
+import DmConversationScreen    from './src/screens/social/DmConversationScreen';
+import SubchannelScreen        from './src/screens/social/SubchannelScreen';
+import PassionChannelsScreen   from './src/screens/social/PassionChannelsScreen';
 
 enableScreens();
 
@@ -59,6 +63,8 @@ function AppNavigator() {
                 options={{ cardStyleInterpolator: () => ({}) }} />
               <Stack.Screen name="DiscoverScreen" component={DiscoverScreen}
                 options={{ cardStyleInterpolator: () => ({}) }} />
+              <Stack.Screen name="MessagesScreen" component={MessagesScreen}
+                options={{ cardStyleInterpolator: () => ({}) }} />
               <Stack.Screen name="ProfileScreen"  component={ProfileScreen}
                 options={{ cardStyleInterpolator: () => ({}) }} />
 
@@ -75,6 +81,9 @@ function AppNavigator() {
               <Stack.Screen name="PassionDetailScreen" component={PassionDetailScreen} />
               <Stack.Screen name="OtherUserScreen"     component={OtherUserScreen} />
               <Stack.Screen name="EditProfileScreen"   component={EditProfileScreen} />
+              <Stack.Screen name="DmConversationScreen"    component={DmConversationScreen} />
+              <Stack.Screen name="SubchannelScreen"        component={SubchannelScreen} />
+              <Stack.Screen name="PassionChannelsScreen"   component={PassionChannelsScreen} />
             </>
           ) : (
             // ── Unauthenticated stack ────────────────────────────────────

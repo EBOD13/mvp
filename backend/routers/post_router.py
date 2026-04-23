@@ -51,6 +51,16 @@ async def get_my_posts(
     return await post_service.get_user_posts(current_user.id, offset, limit)
 
 
+@router.get("/user/{author_id}", response_model=list[PostResponse])
+async def get_posts_by_user(
+    author_id: UUID,
+    offset: int = 0,
+    limit: int = 20,
+    current_user=Depends(get_current_user),
+):
+    return await post_service.get_user_posts(author_id, offset, limit, requesting_user_id=current_user.id)
+
+
 # ── Comments (registered before /{post_id} wildcard) ────────────────────────
 @router.get("/{post_id}/comments", response_model=list[CommentResponse])
 async def get_comments(post_id: UUID, current_user=Depends(get_current_user)):

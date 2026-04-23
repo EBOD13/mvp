@@ -46,6 +46,9 @@ export const postApi = {
   getMyPosts: (offset = 0, limit = 20) =>
     apiClient.get<PostResponse[]>(`/posts/me?offset=${offset}&limit=${limit}`),
 
+  getUserPosts: (userId: string, offset = 0, limit = 20) =>
+    apiClient.get<PostResponse[]>(`/posts/user/${userId}?offset=${offset}&limit=${limit}`),
+
   getPost: (postId: string) =>
     apiClient.get<PostResponse>(`/posts/${postId}`),
 

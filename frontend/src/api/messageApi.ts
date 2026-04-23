@@ -9,6 +9,7 @@ export interface MessageResponse {
   image_url: string | null;
   is_read: boolean;
   created_at: string;
+  sender_username?: string | null;
 }
 
 export interface ConversationSummary {

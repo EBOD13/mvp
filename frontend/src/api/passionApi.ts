@@ -76,6 +76,28 @@ export type Passion = {
   upcomingEvents: PassionEvent[];
 };
 
+export interface SubchannelListItem {
+  id: string;
+  name: string;
+  description: string | null;
+  passion_id: string;
+}
+
+export interface PassionResponse {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  visibility: 'public' | 'private';
+  join_type: JoinType;
+  cover_url: string | null;
+  member_count: number;
+  created_at: string;
+  my_role: 'member' | 'moderator' | 'admin' | 'organizer';
+  is_favorite: boolean;
+  membership_status: MembershipStatus;
+}
+
 export type DiscoverUser = {
   id: string;
   username: string;
@@ -142,11 +164,13 @@ const getMembershipStatuses = async (
   userId: string | null,
 ): Promise<Record<string, MembershipStatus>> => {
   if (!userId || !ids.length) return {};
-  const [{ data: members }, { data: requests }] = await Promise.all([
+  const [{ data: members }, { data: requests }, { data: owned }] = await Promise.all([
     supabase.from('passion_members').select('passion_id').eq('user_id', userId).in('passion_id', ids),
     supabase.from('passion_join_requests').select('passion_id, status').eq('requester_id', userId).in('passion_id', ids),
+    supabase.from('passions').select('id').eq('owner_id', userId).in('id', ids),
   ]);
   const result: Record<string, MembershipStatus> = {};
+  for (const row of owned ?? []) result[row.id] = 'member';
   for (const row of members ?? []) result[row.passion_id] = 'member';
   for (const row of requests ?? []) {
     if (!result[row.passion_id]) {
@@ -203,6 +227,16 @@ export const passionApi = {
 
   removeFavorite: (passionId: string) =>
     apiClient.delete(`/passions/${passionId}/favorite`),
+
+  getSubchannels: (passionId: string) =>
+    apiClient.get<SubchannelListItem[]>(`/passions/${passionId}/subchannels`),
+
+  createSubchannel: (passionId: string, name: string, description?: string) =>
+    apiClient.post<SubchannelListItem>(`/passions/${passionId}/subchannels`, { name, description }),
+
+  // Fetches the backend PassionResponse which includes my_role
+  getPassionDetail: (passionId: string) =>
+    apiClient.get<PassionResponse>(`/passions/${passionId}`),
 
   // Backend-routed discover (bypasses RLS — shows all public + user's private passions)
   async getPublicPassions(query = '', offset = 0, limit = 20): Promise<{ data: Passion[] }> {
@@ -267,13 +301,9 @@ export const passionApi = {
 
   async searchUsers(query: string, offset = 0, limit = 20): Promise<{ data: DiscoverUser[] }> {
     if (!query.trim()) return { data: [] };
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, username, display_name, avatar_url')
-      .or(`display_name.ilike.%${query.trim()}%,username.ilike.%${query.trim()}%`)
-      .order('display_name', { ascending: true })
-      .range(offset, offset + limit - 1);
-    if (error) throw error;
-    return { data: (data ?? []) as DiscoverUser[] };
+    const resp = await apiClient.get<DiscoverUser[]>('/users/search', {
+      params: { q: query.trim(), offset, limit },
+    });
+    return { data: Array.isArray(resp.data) ? resp.data : [] };
   },
 };

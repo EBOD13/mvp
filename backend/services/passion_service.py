@@ -1,7 +1,7 @@
 from typing import Optional
 from lib.supabase_client import supabase
-from lib.exceptions import NotFoundError
-from schemas.passion_schema import PassionListItem, PassionCreate, PassionResponse, PassionDiscoverItem
+from lib.exceptions import NotFoundError, ForbiddenError
+from schemas.passion_schema import PassionListItem, PassionCreate, PassionResponse, PassionDiscoverItem, SubchannelListItem, SubchannelCreate
 
 
 def _normalize_role(role: Optional[str]) -> str:
@@ -123,16 +123,24 @@ async def get_discover_passions(
 
     user_passion_ids = owned_ids | member_ids
 
-    # Fetch public passions
+    # Fetch ALL public passions — search by name OR description
     public_q = supabase.table("passions").select(
         "id, name, description, category, cover_url, member_count, visibility, join_type"
-    ).eq("visibility", "public").order("name")
+    ).eq("visibility", "public").order("member_count", desc=True).order("name")
     if query:
-        public_q = public_q.ilike("name", f"%{query}%")
-    public_result = public_q.range(offset, offset + limit - 1).execute()
-    public_passions = public_result.data or []
+        # Two queries to avoid .or_() cold-start issues; merge in Python
+        by_name = public_q.ilike("name", f"%{query}%").range(offset, offset + limit - 1).execute()
+        by_desc = supabase.table("passions").select(
+            "id, name, description, category, cover_url, member_count, visibility, join_type"
+        ).eq("visibility", "public").ilike("description", f"%{query}%").limit(limit).execute()
+        public_passions = by_name.data or []
+        extra = [r for r in (by_desc.data or []) if r["id"] not in {p["id"] for p in public_passions}]
+        public_passions = public_passions + extra
+    else:
+        public_result = public_q.range(offset, offset + limit - 1).execute()
+        public_passions = public_result.data or []
 
-    # Fetch user's private passions (always show, regardless of pagination)
+    # Fetch user's private passions (always included regardless of pagination)
     user_private: list[dict] = []
     if user_passion_ids:
         priv_q = supabase.table("passions").select(
@@ -142,14 +150,13 @@ async def get_discover_passions(
             priv_q = priv_q.ilike("name", f"%{query}%")
         user_private = priv_q.execute().data or []
 
-    # Merge, deduplicate, sort
+    # Merge, deduplicate
     seen: set[str] = set()
     all_passions: list[dict] = []
     for p in public_passions + user_private:
         if p["id"] not in seen:
             seen.add(p["id"])
             all_passions.append(p)
-    all_passions.sort(key=lambda p: p["name"])
 
     if not all_passions:
         return []
@@ -177,7 +184,7 @@ async def get_discover_passions(
     except Exception:
         pass
 
-    return [
+    items = [
         PassionDiscoverItem(
             id=p["id"],
             name=p["name"],
@@ -196,6 +203,11 @@ async def get_discover_passions(
         )
         for p in all_passions
     ]
+
+    # Surface unjoined passions first so Discover feels global, not personal
+    status_order = {"not_member": 0, "pending": 1, "member": 2}
+    items.sort(key=lambda item: (status_order[item.membership_status], item.name.lower()))
+    return items
 
 
 async def create_passion(user_id: str, data: PassionCreate) -> PassionResponse:
@@ -250,7 +262,7 @@ async def get_passion(passion_id: str, user_id: str) -> PassionResponse:
     if not result.data:
         raise NotFoundError("Passion not found")
 
-    p = result.data
+    p = result.data[0]
 
     # Determine role
     is_owner = p.get("owner_id") == user_id
@@ -334,3 +346,44 @@ async def request_join(passion_id: str, user_id: str) -> PassionResponse:
         if "23505" not in str(e):
             raise
     return await get_passion(passion_id, user_id)
+
+
+async def get_subchannels(passion_id: str) -> list[SubchannelListItem]:
+    result = supabase.table("subchannels").select(
+        "id, name, description, passion_id"
+    ).eq("passion_id", passion_id).order("name").execute()
+    return [SubchannelListItem(**row) for row in result.data or []]
+
+
+async def create_subchannel(passion_id: str, user_id: str, data: SubchannelCreate) -> SubchannelListItem:
+    passion = supabase.table("passions").select("owner_id").eq(
+        "id", passion_id
+    ).limit(1).execute()
+    if not passion.data:
+        raise NotFoundError("Passion not found")
+
+    is_owner = passion.data[0]["owner_id"] == user_id
+    if not is_owner:
+        member = supabase.table("passion_members").select("role").eq(
+            "passion_id", passion_id
+        ).eq("user_id", user_id).limit(1).execute()
+        if not member.data or member.data[0]["role"] not in ("admin", "organizer"):
+            raise ForbiddenError("Only organizers and admins can create channels")
+
+    result = supabase.table("subchannels").insert({
+        "passion_id": passion_id,
+        "name": data.name,
+        "description": data.description,
+        "created_by": user_id,
+    }).execute()
+
+    if not result.data:
+        raise Exception("Failed to create subchannel")
+
+    row = result.data[0]
+    return SubchannelListItem(
+        id=str(row["id"]),
+        name=row["name"],
+        description=row.get("description"),
+        passion_id=str(row["passion_id"]),
+    )

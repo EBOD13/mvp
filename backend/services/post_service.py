@@ -9,7 +9,7 @@ Business logic for posts. Every function here:
 """
 
 from uuid import UUID
-from typing import Literal
+from typing import Literal, Optional
 from lib.supabase_client import supabase
 from lib.exceptions import NotFoundError, ForbiddenError
 from schemas.post_schema import PostCreate, PostUpdate, PostResponse, CommentCreate, CommentResponse
@@ -192,6 +192,7 @@ async def get_user_posts(
     user_id: UUID,
     offset: int = 0,
     limit: int = 20,
+    requesting_user_id: Optional[UUID] = None,
 ) -> list[PostResponse]:
     """Return a paginated list of the user's own posts, newest first."""
     row = (
@@ -203,8 +204,9 @@ async def get_user_posts(
         .execute()
     )
     hydrated: list[PostResponse] = []
+    viewer = requesting_user_id or user_id
     for post in row.data:
-        hydrated.append(await _hydrate_post(post, user_id))
+        hydrated.append(await _hydrate_post(post, viewer))
     return hydrated
 
 

@@ -10,6 +10,7 @@ import { useTheme } from '../../theme';
 export type BottomNavBarProps = {
   activeRoute: keyof RootStackParamList;
   onAddPress: () => void;
+  messageBadge?: number;
 };
 
 type NavProp = StackNavigationProp<RootStackParamList>;
@@ -30,7 +31,7 @@ const TABS: TabDef[] = [
   { key: 'ProfileScreen',  label: 'Profile',  Icon: CircleUser },
 ];
 
-const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeRoute, onAddPress }) => {
+const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeRoute, onAddPress, messageBadge = 0 }) => {
   const navigation = useNavigation<NavProp>();
   const { colors, spacing, shadows } = useTheme();
   const insets = useSafeAreaInsets();
@@ -38,6 +39,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeRoute, onAddPress }) 
   const renderTab = (tab: TabDef) => {
     const isActive = activeRoute === tab.key;
     const color = isActive ? colors.primary : colors.textDisabled;
+    const showBadge = tab.key === 'MessagesScreen' && messageBadge > 0;
     return (
       <TouchableOpacity
         key={tab.key}
@@ -50,7 +52,27 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeRoute, onAddPress }) 
         onPress={() => navigation.navigate(tab.key)}
         activeOpacity={0.7}
       >
-        <tab.Icon size={22} color={color} />
+        <View style={{ position: 'relative' }}>
+          <tab.Icon size={22} color={color} />
+          {showBadge && (
+            <View style={{
+              position: 'absolute',
+              top: -3,
+              right: -6,
+              backgroundColor: '#EF4444',
+              borderRadius: 6,
+              minWidth: 12,
+              height: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 2,
+            }}>
+              <Text style={{ color: '#fff', fontSize: 8, fontWeight: '700' }}>
+                {messageBadge > 9 ? '9+' : messageBadge}
+              </Text>
+            </View>
+          )}
+        </View>
         <Text style={{ fontSize: 11, color, marginTop: 3, fontWeight: '500' }}>{tab.label}</Text>
       </TouchableOpacity>
     );

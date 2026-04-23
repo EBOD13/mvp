@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from uuid import UUID
-from schemas.passion_schema import PassionListItem, PassionCreate, PassionResponse, PassionDiscoverItem
+from schemas.passion_schema import PassionListItem, PassionCreate, PassionResponse, PassionDiscoverItem, SubchannelListItem, SubchannelCreate
 from services import passion_service
 from lib.auth import get_current_user
 
@@ -65,3 +65,14 @@ async def add_favorite(passion_id: UUID, current_user=Depends(get_current_user))
 @router.delete("/{passion_id}/favorite", status_code=204)
 async def remove_favorite(passion_id: UUID, current_user=Depends(get_current_user)):
     await passion_service.remove_favorite(str(current_user.id), str(passion_id))
+
+
+# ── Subchannels ────────────────────────────────────────────────────────────────
+@router.get("/{passion_id}/subchannels", response_model=list[SubchannelListItem])
+async def get_subchannels(passion_id: UUID, current_user=Depends(get_current_user)):
+    return await passion_service.get_subchannels(str(passion_id))
+
+
+@router.post("/{passion_id}/subchannels", response_model=SubchannelListItem, status_code=201)
+async def create_subchannel(passion_id: UUID, data: SubchannelCreate, current_user=Depends(get_current_user)):
+    return await passion_service.create_subchannel(str(passion_id), str(current_user.id), data)

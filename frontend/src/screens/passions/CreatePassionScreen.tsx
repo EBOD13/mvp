@@ -241,7 +241,7 @@ const CreatePassionScreen: React.FC = () => {
                     <Text style={{
                       fontSize: fontSizes.sm,
                       fontWeight: active ? fontWeights.semibold : fontWeights.regular,
-                      color: active ? '#fff' : colors.textSecondary,
+                      color: active ? colors.textInverse : colors.textSecondary,
                     }}>
                       {cat}
                     </Text>
@@ -282,11 +282,11 @@ const CreatePassionScreen: React.FC = () => {
                       backgroundColor: active ? colors.primary : 'transparent',
                     }}
                   >
-                    <Icon size={14} color={active ? '#fff' : colors.textSecondary} />
+                    <Icon size={14} color={active ? colors.textInverse : colors.textSecondary} />
                     <Text style={{
                       fontSize: fontSizes.sm,
                       fontWeight: fontWeights.medium,
-                      color: active ? '#fff' : colors.textSecondary,
+                      color: active ? colors.textInverse : colors.textSecondary,
                     }}>
                       {text}
                     </Text>
@@ -330,11 +330,11 @@ const CreatePassionScreen: React.FC = () => {
                       backgroundColor: active ? colors.primary : 'transparent',
                     }}
                   >
-                    <Icon size={14} color={active ? '#fff' : colors.textSecondary} />
+                    <Icon size={14} color={active ? colors.textInverse : colors.textSecondary} />
                     <Text style={{
                       fontSize: fontSizes.sm,
                       fontWeight: fontWeights.medium,
-                      color: active ? '#fff' : colors.textSecondary,
+                      color: active ? colors.textInverse : colors.textSecondary,
                     }}>
                       {text}
                     </Text>

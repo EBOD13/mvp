@@ -19,3 +19,10 @@ class UpdateProfileRequest(BaseModel):
     display_name: Optional[str] = None
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
+
+
+class UserSearchResult(BaseModel):
+    id: UUID
+    username: str
+    display_name: str
+    avatar_url: Optional[str] = None

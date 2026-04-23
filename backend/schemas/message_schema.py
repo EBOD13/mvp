@@ -24,6 +24,7 @@ class MessageResponse(BaseModel):
     image_url: Optional[str] = None
     is_read: bool
     created_at: datetime
+    sender_username: Optional[str] = None
 
     class Config:
         from_attributes = True
