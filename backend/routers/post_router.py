@@ -40,6 +40,17 @@ async def get_feed(
     return await post_service.get_feed(current_user.id, filter, offset, limit)
 
 
+# ── My Posts ─────────────────────────────────
+@router.get("/me", response_model=list[PostResponse])
+async def get_my_posts(
+    offset: int = 0,
+    limit: int = 20,
+    current_user=Depends(get_current_user),
+):
+    """Get the logged-in user's own posts, newest first."""
+    return await post_service.get_user_posts(current_user.id, offset, limit)
+
+
 # ── Comments (registered before /{post_id} wildcard) ────────────────────────
 @router.get("/{post_id}/comments", response_model=list[CommentResponse])
 async def get_comments(post_id: UUID, current_user=Depends(get_current_user)):

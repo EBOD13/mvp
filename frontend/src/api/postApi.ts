@@ -43,6 +43,9 @@ export const postApi = {
       `/posts/feed?filter=${filter}&offset=${offset}&limit=${limit}`,
     ),
 
+  getMyPosts: (offset = 0, limit = 20) =>
+    apiClient.get<PostResponse[]>(`/posts/me?offset=${offset}&limit=${limit}`),
+
   getPost: (postId: string) =>
     apiClient.get<PostResponse>(`/posts/${postId}`),
 
