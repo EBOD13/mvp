@@ -10,6 +10,7 @@ from routers import (
 )
 from routers.post_router import router as post_router
 from routers.passion_router import router as passion_router
+from routers.message_router import router as message_router
 
 app = FastAPI()
 
@@ -29,3 +30,4 @@ app.include_router(event_router.router)
 
 app.include_router(comment_router.router)
 app.include_router(phriendship_router.router)
+app.include_router(message_router)
