@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -100,6 +100,13 @@ const HomeFeedScreen: React.FC = () => {
     unsavePost,
     deletePost,
   } = useFeed(filter);
+
+  // Refresh when returning from CreatePostScreen (edit) or other screens
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   const handleDelete = (postId: string) => {
     Alert.alert(

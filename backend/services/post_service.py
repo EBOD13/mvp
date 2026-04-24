@@ -10,6 +10,7 @@ Business logic for posts. Every function here:
 
 from uuid import UUID
 from typing import Literal, Optional
+from datetime import datetime, timezone
 from lib.supabase_client import supabase
 from lib.exceptions import NotFoundError, ForbiddenError
 from schemas.post_schema import PostCreate, PostUpdate, PostResponse, CommentCreate, CommentResponse
@@ -124,13 +125,24 @@ async def get_feed(
 
     try:
         if filter == "passions":
-            passions = (
+            # Passions the user is a member of
+            members = (
                 supabase.table("passion_members")
                 .select("passion_id")
                 .eq("user_id", user_id_str)
                 .execute()
             )
-            passion_ids = [row["passion_id"] for row in passions.data]
+            # Passions the user owns (may not always be in passion_members)
+            owned = (
+                supabase.table("passions")
+                .select("id")
+                .eq("owner_id", user_id_str)
+                .execute()
+            )
+            passion_ids = list(
+                {row["passion_id"] for row in members.data or []}
+                | {row["id"] for row in owned.data or []}
+            )
             if not passion_ids:
                 return []
 
@@ -227,9 +239,11 @@ async def update_post(post_id: UUID, user_id: UUID, data: PostUpdate) -> PostRes
     if existing.data[0]["author_id"] != str(user_id):
         raise ForbiddenError("You can only edit your own posts")
 
-    # Build the update payload — only include fields that were actually sent
-    update_data = data.model_dump(exclude_unset=True)
-    update_data["updated_at"] = "now()"  # Refresh the timestamp
+    # Build the update payload — only include fields that were actually sent.
+    # mode='json' ensures UUID/datetime values are serialized to strings so
+    # the Supabase client can JSON-encode them without errors.
+    update_data = data.model_dump(exclude_unset=True, mode='json')
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
 
     supabase.table("posts").update(update_data).eq("id", str(post_id)).execute()
     return await get_post(post_id, user_id)

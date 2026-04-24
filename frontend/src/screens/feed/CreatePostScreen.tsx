@@ -11,16 +11,20 @@ import {
   KeyboardAvoidingView,
   Dimensions,
   ActivityIndicator,
+  Modal,
+  ScrollView,
+  Pressable,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { X, Images, Video, Globe, Lock } from 'lucide-react-native';
+import { Check, ChevronDown, Globe, Hash, Images, Lock, Video, X } from 'lucide-react-native';
 
 import { useTheme } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
 import { postApi, uploadMediaAssets, MediaAsset } from '../../api/postApi';
+import { passionApi, PassionListItem } from '../../api/passionApi';
 import { RootStackParamList } from '../../navigation/types';
 import { Avatar } from '../../components/common/Avatar';
 import PassionFruitRating from '../../components/icons/PassionFruitRating';
@@ -34,6 +38,157 @@ type PostType   = 'post' | 'review';
 const MAX_MEDIA = 12;
 const SCREEN_W  = Dimensions.get('window').width;
 
+const ACCENT_COLORS = [
+  '#8C6AD9', '#5B8DEF', '#E26D6D', '#48A6A7',
+  '#E59D5C', '#6D9F71', '#D4848A', '#7B8FA1',
+];
+const accentColor = (id: string) => {
+  const n = id.split('').reduce((s, c) => s + c.charCodeAt(0), 0);
+  return ACCENT_COLORS[n % ACCENT_COLORS.length];
+};
+
+// ── Passion picker modal ──────────────────────────────────────────────────────
+
+interface PassionPickerProps {
+  visible: boolean;
+  passions: PassionListItem[];
+  selectedId: string | null;
+  onSelect: (id: string | null, name: string | null) => void;
+  onClose: () => void;
+}
+
+const PassionPicker: React.FC<PassionPickerProps> = ({ visible, passions, selectedId, onSelect, onClose }) => {
+  const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' }} onPress={onClose}>
+        <Pressable
+          style={{
+            position: 'absolute',
+            bottom: 0, left: 0, right: 0,
+            backgroundColor: colors.background,
+            borderTopLeftRadius: radii['2xl'] ?? 24,
+            borderTopRightRadius: radii['2xl'] ?? 24,
+            paddingTop: spacing['2'],
+            paddingBottom: spacing['8'],
+            maxHeight: '75%',
+          }}
+          onPress={() => {}}
+        >
+          {/* Handle bar */}
+          <View style={{
+            width: 40, height: 4, borderRadius: 2,
+            backgroundColor: colors.border,
+            alignSelf: 'center',
+            marginBottom: spacing['4'],
+          }} />
+
+          <Text style={{
+            fontSize: fontSizes.lg,
+            fontWeight: fontWeights.bold,
+            color: colors.textPrimary,
+            paddingHorizontal: spacing['5'],
+            marginBottom: spacing['3'],
+          }}>
+            Post in…
+          </Text>
+
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* None option */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => { onSelect(null, null); onClose(); }}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: spacing['5'],
+                paddingVertical: spacing['4'],
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border,
+              }}
+            >
+              <View style={{
+                width: 42, height: 42, borderRadius: 12,
+                backgroundColor: colors.surface,
+                borderWidth: 1.5, borderColor: colors.border,
+                alignItems: 'center', justifyContent: 'center',
+                marginRight: spacing['3'],
+              }}>
+                <Globe size={20} color={colors.textSecondary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.textPrimary }}>
+                  No passion (global)
+                </Text>
+                <Text style={{ fontSize: fontSizes.xs, color: colors.textSecondary, marginTop: 2 }}>
+                  Visible to everyone on your feed
+                </Text>
+              </View>
+              {selectedId === null && <Check size={18} color={colors.primary} />}
+            </TouchableOpacity>
+
+            {/* Passion list */}
+            {passions.map(p => {
+              const color = accentColor(p.id);
+              const selected = selectedId === p.id;
+              return (
+                <TouchableOpacity
+                  key={p.id}
+                  activeOpacity={0.7}
+                  onPress={() => { onSelect(p.id, p.name); onClose(); }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: spacing['5'],
+                    paddingVertical: spacing['4'],
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                    backgroundColor: selected ? color + '0A' : 'transparent',
+                  }}
+                >
+                  <View style={{
+                    width: 42, height: 42, borderRadius: 12,
+                    backgroundColor: color + '20',
+                    borderWidth: 1.5, borderColor: color + '55',
+                    alignItems: 'center', justifyContent: 'center',
+                    marginRight: spacing['3'],
+                  }}>
+                    <Text style={{ fontSize: fontSizes.lg, fontWeight: fontWeights.bold, color }}>
+                      {p.name.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.textPrimary }}>
+                      {p.name}
+                    </Text>
+                    {p.category && (
+                      <Text style={{ fontSize: fontSizes.xs, color: colors.textSecondary, marginTop: 2 }}>
+                        {p.category}  ·  {p.member_count} members
+                      </Text>
+                    )}
+                  </View>
+                  {selected && <Check size={18} color={color} />}
+                </TouchableOpacity>
+              );
+            })}
+
+            {passions.length === 0 && (
+              <View style={{ padding: spacing['6'], alignItems: 'center' }}>
+                <Text style={{ fontSize: fontSizes.sm, color: colors.textSecondary, textAlign: 'center' }}>
+                  Join some passions to post in them.
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+};
+
+// ── CreatePostScreen ──────────────────────────────────────────────────────────
+
 const CreatePostScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route      = useRoute<RoutePropT>();
@@ -45,6 +200,7 @@ const CreatePostScreen: React.FC = () => {
 
   const [content,         setContent]        = useState(editPost?.content ?? '');
   const [passionId,       setPassionId]       = useState<string | null>(editPost?.passion_id ?? null);
+  const [passionName,     setPassionName]     = useState<string | null>(editPost?.passion_name ?? null);
   const [visibility,      setVisibility]      = useState<Visibility>(editPost?.visibility ?? 'public');
   const [commentsEnabled, setCommentsEnabled] = useState(editPost?.comments_enabled ?? true);
   const [postType,        setPostType]        = useState<PostType>(editPost?.is_review ? 'review' : 'post');
@@ -53,9 +209,18 @@ const CreatePostScreen: React.FC = () => {
   const [previewUris,     setPreviewUris]     = useState<string[]>(editPost?.media_urls ?? []);
   const [submitting,      setSubmitting]      = useState(false);
   const [previewIndex,    setPreviewIndex]    = useState(0);
+  const [passions,        setPassions]        = useState<PassionListItem[]>([]);
+  const [pickerVisible,   setPickerVisible]   = useState(false);
 
   const isReview  = postType === 'review';
   const canSubmit = (content.trim().length > 0 || previewUris.length > 0) && !submitting;
+
+  // Load user's passions for the picker
+  useEffect(() => {
+    passionApi.getMyPassions()
+      .then(res => setPassions(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setPassions([]));
+  }, []);
 
   useEffect(() => {
     if (!isReview) setRating(0);
@@ -104,12 +269,10 @@ const CreatePostScreen: React.FC = () => {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      // Upload any local assets that haven't been uploaded yet
       let finalUrls = previewUris;
       const localAssets = mediaAssets.filter(a => a.uri.startsWith('file://') || a.uri.startsWith('ph://'));
       if (localAssets.length > 0 && userId) {
         const uploaded = await uploadMediaAssets(localAssets, userId);
-        // Replace local URIs with public URLs in the same order
         finalUrls = previewUris.map(uri => {
           const idx = localAssets.findIndex(a => a.uri === uri);
           return idx >= 0 ? uploaded[idx] : uri;
@@ -139,7 +302,8 @@ const CreatePostScreen: React.FC = () => {
     }
   };
 
-  // ── Media preview strip ────────────────────────────────────────────────────
+  // ── Media preview strip ───────────────────────────────────────────────────
+
   const PREVIEW_GAP  = 16;
   const PREVIEW_SIZE = SCREEN_W - spacing['8'] * 2;
   const PREVIEW_STEP = PREVIEW_SIZE + PREVIEW_GAP;
@@ -149,17 +313,12 @@ const CreatePostScreen: React.FC = () => {
       (mediaAssets[index]?.mimeType ?? '').startsWith('video');
     return (
       <View style={{ width: PREVIEW_SIZE, aspectRatio: 1, borderRadius: radii.lg, overflow: 'hidden', marginRight: index < previewUris.length - 1 ? PREVIEW_GAP : 0 }}>
-        <Image
-          source={{ uri: item }}
-          style={{ width: '100%', height: '100%' }}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: item }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
         {isVideo && (
           <View style={{
             ...StyleSheet_absoluteFill,
             backgroundColor: 'rgba(0,0,0,0.3)',
-            alignItems: 'center',
-            justifyContent: 'center',
+            alignItems: 'center', justifyContent: 'center',
           }}>
             <Video size={40} color="#fff" />
           </View>
@@ -178,11 +337,15 @@ const CreatePostScreen: React.FC = () => {
     );
   };
 
+  // ── Derived colors ────────────────────────────────────────────────────────
+
+  const selectedColor = passionId ? accentColor(passionId) : null;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
 
-        {/* ── Header ────────────────────────────────────────────────────────── */}
+        {/* ── Header ── */}
         <View style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -214,15 +377,15 @@ const CreatePostScreen: React.FC = () => {
             }}
           >
             {submitting
-              ? <ActivityIndicator size="small" color="#fff" />
-              : <Text style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.semibold, color: '#fff' }}>
+              ? <ActivityIndicator size="small" color={colors.textInverse} />
+              : <Text style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.semibold, color: colors.textInverse }}>
                   {isEdit ? 'Save' : 'Post'}
                 </Text>
             }
           </TouchableOpacity>
         </View>
 
-        {/* ── Compose area ──────────────────────────────────────────────────── */}
+        {/* ── Compose area ── */}
         <View style={{
           flexDirection: 'row',
           paddingHorizontal: spacing['4'],
@@ -231,6 +394,24 @@ const CreatePostScreen: React.FC = () => {
         }}>
           <Avatar size="md" name={userId ?? ''} style={{ marginTop: 2 }} />
           <View style={{ flex: 1, marginLeft: spacing['3'] }}>
+            {/* Passion context label */}
+            {passionId && passionName && selectedColor && (
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: spacing['2'],
+                gap: spacing['1'],
+              }}>
+                <Hash size={12} color={selectedColor} />
+                <Text style={{
+                  fontSize: fontSizes.sm,
+                  fontWeight: fontWeights.semibold,
+                  color: selectedColor,
+                }}>
+                  {passionName}
+                </Text>
+              </View>
+            )}
             <TextInput
               style={{
                 fontSize: fontSizes.md,
@@ -245,7 +426,6 @@ const CreatePostScreen: React.FC = () => {
               multiline
               autoFocus={!isEdit}
             />
-            {/* Review rating */}
             {isReview && (
               <View style={{ marginTop: spacing['2'] }}>
                 <PassionFruitRating value={rating} onChange={setRating} size={26} />
@@ -254,7 +434,7 @@ const CreatePostScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* ── Media preview carousel ─────────────────────────────────────────── */}
+        {/* ── Media preview carousel ── */}
         {previewUris.length > 0 && (
           <View style={{ marginHorizontal: spacing['4'], marginBottom: spacing['3'] }}>
             <FlatList
@@ -271,7 +451,6 @@ const CreatePostScreen: React.FC = () => {
               }}
               getItemLayout={(_, index) => ({ length: PREVIEW_STEP, offset: PREVIEW_STEP * index, index })}
             />
-            {/* Dot indicators */}
             {previewUris.length > 1 && (
               <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: spacing['2'] }}>
                 {previewUris.map((_, i) => (
@@ -288,14 +467,47 @@ const CreatePostScreen: React.FC = () => {
           </View>
         )}
 
-        {/* ── Bottom toolbar ─────────────────────────────────────────────────── */}
+        {/* ── Bottom toolbar ── */}
         <View style={{
           borderTopWidth: 1,
           borderTopColor: colors.border,
           paddingHorizontal: spacing['4'],
           paddingVertical: spacing['3'],
-          gap: spacing['4'],
+          gap: spacing['3'],
         }}>
+
+          {/* Passion selector */}
+          <TouchableOpacity
+            onPress={() => setPickerVisible(true)}
+            activeOpacity={0.8}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing['2'],
+              paddingHorizontal: spacing['3'],
+              paddingVertical: spacing['2'],
+              borderRadius: radii.lg,
+              borderWidth: 1.5,
+              borderColor: selectedColor ? selectedColor + '88' : colors.border,
+              backgroundColor: selectedColor ? selectedColor + '0F' : colors.surface,
+              alignSelf: 'flex-start',
+            }}
+          >
+            {selectedColor
+              ? <Hash size={14} color={selectedColor} />
+              : <Globe size={14} color={colors.textSecondary} />
+            }
+            <Text style={{
+              fontSize: fontSizes.sm,
+              fontWeight: fontWeights.semibold,
+              color: selectedColor ?? colors.textSecondary,
+              maxWidth: 180,
+            }} numberOfLines={1}>
+              {passionName ?? 'Select passion (optional)'}
+            </Text>
+            <ChevronDown size={14} color={selectedColor ?? colors.textSecondary} />
+          </TouchableOpacity>
+
           {/* Media pickers */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['5'] }}>
             <TouchableOpacity
@@ -325,7 +537,6 @@ const CreatePostScreen: React.FC = () => {
 
           {/* Post / Review + Visibility row */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['3'] }}>
-            {/* Post / Review pill toggle */}
             <View style={{
               flexDirection: 'row',
               backgroundColor: colors.surface,
@@ -348,7 +559,7 @@ const CreatePostScreen: React.FC = () => {
                   <Text style={{
                     fontSize: fontSizes.sm,
                     fontWeight: fontWeights.medium,
-                    color: postType === opt ? '#fff' : colors.textSecondary,
+                    color: postType === opt ? colors.textInverse : colors.textSecondary,
                     textTransform: 'capitalize',
                   }}>
                     {opt}
@@ -357,7 +568,6 @@ const CreatePostScreen: React.FC = () => {
               ))}
             </View>
 
-            {/* Visibility toggle */}
             <TouchableOpacity
               onPress={() => setVisibility(v => v === 'public' ? 'private' : 'public')}
               style={{
@@ -383,11 +593,22 @@ const CreatePostScreen: React.FC = () => {
         </View>
 
       </KeyboardAvoidingView>
+
+      {/* ── Passion picker modal ── */}
+      <PassionPicker
+        visible={pickerVisible}
+        passions={passions}
+        selectedId={passionId}
+        onSelect={(id, name) => {
+          setPassionId(id);
+          setPassionName(name);
+        }}
+        onClose={() => setPickerVisible(false)}
+      />
     </SafeAreaView>
   );
 };
 
-// Inline helper to avoid importing StyleSheet just for absoluteFill
 const StyleSheet_absoluteFill = {
   position: 'absolute' as const,
   top: 0, left: 0, right: 0, bottom: 0,
