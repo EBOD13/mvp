@@ -6,6 +6,7 @@ export interface UserProfile {
   display_name: string;
   bio: string | null;
   avatar_url: string | null;
+  profile_song_url: string | null;
   is_verified: boolean;
   phriends_count: number;
   created_at: string;
@@ -20,6 +21,7 @@ export async function updateMe(data: {
   display_name?: string;
   bio?: string | null;
   avatar_url?: string;
+  profile_song_url?: string | null;
 }) {
   const response = await apiClient.patch<UserProfile>('/users/me', data);
   return response.data;

@@ -5,7 +5,7 @@ from schemas.user_schema import UserProfile, UpdateProfileRequest, UserSearchRes
 
 async def get_me(user_id: str) -> UserProfile:
     result = supabase.table("users").select(
-        "id, username, display_name, bio, avatar_url, is_verified, created_at"
+        "id, username, display_name, bio, avatar_url, profile_song_url, is_verified, created_at"
     ).eq("id", user_id).limit(1).execute()
 
     # Count accepted phriendships via two simple queries (avoids .or_() cold-start issues)
@@ -27,7 +27,7 @@ async def get_me(user_id: str) -> UserProfile:
 
 async def get_user_profile(user_id: str) -> UserProfile:
     result = supabase.table("users").select(
-        "id, username, display_name, bio, avatar_url, is_verified, created_at"
+        "id, username, display_name, bio, avatar_url, profile_song_url, is_verified, created_at"
     ).eq("id", user_id).limit(1).execute()
 
     if not result.data:
@@ -50,7 +50,7 @@ async def get_user_profile(user_id: str) -> UserProfile:
 
 
 async def update_me(user_id: str, data: UpdateProfileRequest) -> UserProfile:
-    updates = data.model_dump(exclude_none=True)
+    updates = data.model_dump(exclude_unset=True)
     if not updates:
         return await get_me(user_id)
     supabase.table("users").update(updates).eq("id", user_id).execute()

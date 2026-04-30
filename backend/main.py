@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 
 from routers import (
     auth_router,
@@ -7,10 +8,12 @@ from routers import (
     event_router,
     comment_router,
     phriendship_router,
+    post_router,
+    passion_router,
+    message_router,
 )
-from routers.post_router import router as post_router
-from routers.passion_router import router as passion_router
-from routers.message_router import router as message_router
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
 
@@ -24,10 +27,9 @@ app.add_middleware(
 
 app.include_router(auth_router.router)
 app.include_router(user_router.router)
-app.include_router(post_router)
-app.include_router(passion_router)
+app.include_router(post_router.router)
+app.include_router(passion_router.router)
 app.include_router(event_router.router)
-
 app.include_router(comment_router.router)
 app.include_router(phriendship_router.router)
-app.include_router(message_router)
+app.include_router(message_router.router)

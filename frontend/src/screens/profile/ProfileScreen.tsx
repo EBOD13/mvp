@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Image, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Settings } from 'lucide-react-native';
 import { RootStackParamList } from '../../navigation/types';
@@ -16,45 +16,12 @@ import { postApi } from '../../api/postApi';
 import { PostResponse } from '../../types/feed';
 import PostCard from '../../components/cards/PostCard';
 import CommentSheet from '../../components/common/CommentSheet';
+import SongPlayer from '../../components/common/SongPlayer';
 import BottomNavBar from '../../components/layout/BottomNavBar';
 import FloatingActionButton from '../../components/layout/FloatingActionButton';
 
 type ProfileNavigationProp = StackNavigationProp<RootStackParamList>;
 
-const SongPlayer = () => {
-  const { colors, spacing, textVariants, radii } = useTheme();
-  return (
-    <View style={{
-      marginBottom: spacing['6'],
-      paddingHorizontal: spacing['4'],
-      paddingVertical: spacing['3'],
-      backgroundColor: colors.surface,
-      borderRadius: radii.md,
-      borderWidth: 1,
-      borderColor: colors.border,
-    }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing['2'] }}>
-        <View style={{
-          width: 0, height: 0,
-          borderTopWidth: 7, borderBottomWidth: 7, borderLeftWidth: 13,
-          borderTopColor: 'transparent', borderBottomColor: 'transparent',
-          borderLeftColor: colors.textDisabled,
-          marginRight: spacing['3'],
-        }} />
-        <View style={{ flex: 1, height: 2, backgroundColor: colors.border, borderRadius: 1 }}>
-          <View style={{
-            position: 'absolute', left: '30%', top: -5,
-            width: 12, height: 12, borderRadius: 6,
-            backgroundColor: colors.textDisabled,
-          }} />
-        </View>
-      </View>
-      <Text style={[textVariants.caption as any, { color: colors.textDisabled }]}>
-        Profile song coming soon
-      </Text>
-    </View>
-  );
-};
 
 const FavoriteCard = ({ name, coverUrl }: { name: string; coverUrl: string | null }) => {
   const { colors, spacing, textVariants, radii } = useTheme();
@@ -99,6 +66,7 @@ const ProfileScreen = () => {
   const navigation = useNavigation<ProfileNavigationProp>();
   const { colors, spacing, textVariants } = useTheme();
   const { isLoading } = useAuth();
+  const isFocused = useIsFocused();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [passions, setPassions] = useState<PassionListItem[]>([]);
   const [fabVisible, setFabVisible] = useState(false);
@@ -253,7 +221,11 @@ const ProfileScreen = () => {
           />
 
           {/* ── Profile Song ── */}
-          <SongPlayer />
+          {!!profile?.profile_song_url && isFocused && (
+            <View style={{ marginBottom: spacing['6'] }}>
+              <SongPlayer songUrl={profile.profile_song_url} />
+            </View>
+          )}
 
           {/* ── Best Phriends ── */}
           <View style={{ marginBottom: spacing['6'] }}>

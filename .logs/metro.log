@@ -6,71 +6,15 @@
 Welcome to React Native v0.84
 Starting dev server on http://localhost:8081
 
-
-                        ▒▒▓▓▓▓▒▒
-                     ▒▓▓▓▒▒░░▒▒▓▓▓▒
-                  ▒▓▓▓▓░░░▒▒▒▒░░░▓▓▓▓▒
-                 ▓▓▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▓▓
-                 ▓▓░░░░░▒▓▓▓▓▓▓▒░░░░░▓▓
-                 ▓▓░░▓▓▒░░░▒▒░░░▒▓▒░░▓▓
-                 ▓▓░░▓▓▓▓▓▒▒▒▒▓▓▓▓▒░░▓▓
-                 ▓▓░░▓▓▓▓▓▓▓▓▓▓▓▓▓▒░░▓▓
-                 ▓▓▒░░▒▒▓▓▓▓▓▓▓▓▒░░░▒▓▓
-                  ▒▓▓▓▒░░░▒▓▓▒░░░▒▓▓▓▒
-                     ▒▓▓▓▒░░░░▒▓▓▓▒
-                        ▒▒▓▓▓▓▒▒
-
-
-                Welcome to Metro v0.83.5
-              Fast - Scalable - Integrated
-
-
- INFO  Dev server ready. Press Ctrl+C to exit.
- INFO  Interactive mode is not supported in this environment
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96% (1034/1059)
- BUNDLE  ./index.js 
- INFO  [1m[7m💡 JavaScript logs have moved![22m They can now be viewed in React Native DevTools. Tip: Type [1mj[22m in the terminal to open.[27m
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- ERROR  [timeout] connection terminated with Device for app='com.frontend' on device='sdk_gphone64_x86_64 - 14 - API 34' after not responding for 60 seconds.
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
- BUNDLE  ./index.js ░░░░░░░░░░░░░░░░ 0% (0/1)
- BUNDLE  ./index.js 
+[31m[1merror[22m[39m [0mlisten EADDRINUSE: address already in use :::8081.[0m
+[0mError: listen EADDRINUSE: address already in use :::8081
+    at Server.setupListenHandle [as _listen2] (node:net:1937:16)
+    at listenInCluster (node:net:1994:12)
+    at Server.listen (node:net:2099:7)
+    at C:\Users\maril\OneDrive\Documents\GitHub\mvp\frontend\node_modules\metro\src\index.flow.js:455:14
+    at new Promise (<anonymous>)
+    at earlyPortCheck (C:\Users\maril\OneDrive\Documents\GitHub\mvp\frontend\node_modules\metro\src\index.flow.js:451:11)
+    at Object.runServer (C:\Users\maril\OneDrive\Documents\GitHub\mvp\frontend\node_modules\metro\src\index.flow.js:201:9)
+    at Object.runServer [as func] (C:\Users\maril\OneDrive\Documents\GitHub\mvp\frontend\node_modules\@react-native\community-cli-plugin\dist\commands\start\runServer.js:147:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Command.handleAction (C:\Users\maril\OneDrive\Documents\GitHub\mvp\frontend\node_modules\@react-native-community\cli\build\index.js:139:9)[0m
