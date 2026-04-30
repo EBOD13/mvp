@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
+import DocumentPicker from 'react-native-document-picker';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ChevronLeft, Camera, Music } from 'lucide-react-native';
@@ -21,6 +22,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { Avatar } from '../../components/common/Avatar';
 import { getMe, updateMe } from '../../api/userApi';
 import { supabase } from '../../lib/supabase';
+import { SUPABASE_URL } from '../../config/env';
 
 type Nav = StackNavigationProp<RootStackParamList, 'EditProfileScreen'>;
 
@@ -29,13 +31,17 @@ const EditProfileScreen = () => {
   const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
   const { userId } = useAuth();
 
-  const [displayName,  setDisplayName]  = useState('');
-  const [username,     setUsername]     = useState('');
-  const [bio,          setBio]          = useState('');
-  const [avatarUri,    setAvatarUri]    = useState<string | null>(null);
-  const [avatarBase64, setAvatarBase64] = useState<{ base64: string; ext: string } | null>(null);
-  const [loading,      setLoading]      = useState(true);
-  const [saving,       setSaving]       = useState(false);
+  const [displayName,     setDisplayName]     = useState('');
+  const [username,        setUsername]        = useState('');
+  const [bio,             setBio]             = useState('');
+  const [avatarUri,       setAvatarUri]       = useState<string | null>(null);
+  const [avatarBase64,    setAvatarBase64]    = useState<{ base64: string; ext: string } | null>(null);
+  const [currentSongUrl,  setCurrentSongUrl]  = useState<string | null>(null);
+  const [pickedSongName,  setPickedSongName]  = useState<string | null>(null);
+  const [songUri,         setSongUri]         = useState<string | null>(null);
+  const [removeSong,      setRemoveSong]      = useState(false);
+  const [loading,         setLoading]         = useState(true);
+  const [saving,          setSaving]          = useState(false);
 
   useEffect(() => {
     getMe()
@@ -44,6 +50,7 @@ const EditProfileScreen = () => {
         setUsername(me.username ?? '');
         setBio(me.bio ?? '');
         setAvatarUri(me.avatar_url ?? null);
+        setCurrentSongUrl(me.profile_song_url ?? null);
       })
       .catch(() => Alert.alert('Error', 'Could not load profile.'))
       .finally(() => setLoading(false));
@@ -64,16 +71,63 @@ const EditProfileScreen = () => {
     }
   };
 
+  const handlePickSong = async () => {
+    try {
+      const file = await DocumentPicker.pickSingle({
+        type: [DocumentPicker.types.audio],
+        copyTo: 'cachesDirectory',
+      });
+      setPickedSongName(file.name ?? 'profile_song.mp3');
+      setSongUri(file.fileCopyUri ?? file.uri ?? null);
+      setRemoveSong(false);
+    } catch (err) {
+      if (!DocumentPicker.isCancel(err)) {
+        Alert.alert('Error', 'Failed to pick a song.');
+      }
+    }
+  };
+
   const uploadAvatar = async (): Promise<string | null> => {
     if (!avatarBase64 || !userId) return null;
     const { base64, ext } = avatarBase64;
     const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
     const path = `avatars/${userId}/avatar.${ext}`;
-    const arrayBuffer = await fetch(`data:${mimeType};base64,${base64}`).then(r => r.arrayBuffer());
+    const blob = await fetch(`data:${mimeType};base64,${base64}`).then(r => r.blob());
     const { error } = await supabase.storage
       .from('post-media')
-      .upload(path, arrayBuffer, { contentType: mimeType, upsert: true });
+      .upload(path, blob, { contentType: mimeType, upsert: true });
     if (error) throw new Error(`Avatar upload failed: ${error.message}`);
+    return supabase.storage.from('post-media').getPublicUrl(path).data.publicUrl;
+  };
+
+  const uploadSong = async (): Promise<string | null> => {
+    if (!songUri || !userId) return null;
+
+    const rawName = pickedSongName ?? 'profile_song.mp3';
+    // Preserve original filename so the URL carries the real title
+    const safeName = rawName.replace(/[^\w\s.\-]/g, '_').replace(/\s+/g, '_').trim();
+    const mimeType = 'audio/mpeg';
+    const path = `songs/${userId}/${safeName}`;
+    
+    // React Native FormData handles local URIs natively without reading into memory
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
+
+    const formData = new FormData();
+    formData.append('file', { uri: songUri, name: path.split('/').pop(), type: mimeType } as any);
+
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${encodeURIComponent('post-media')}/${path}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'x-upsert': 'true',
+      },
+      body: formData,
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Song upload failed: ${body}`);
+    }
     return supabase.storage.from('post-media').getPublicUrl(path).data.publicUrl;
   };
 
@@ -85,10 +139,18 @@ const EditProfileScreen = () => {
     setSaving(true);
     try {
       const newAvatarUrl = avatarBase64 ? await uploadAvatar() : undefined;
+      let songUpdate: { profile_song_url?: string | null } = {};
+      if (songUri) {
+        songUpdate = { profile_song_url: await uploadSong() };
+      } else if (removeSong) {
+        songUpdate = { profile_song_url: null };
+      }
+
       await updateMe({
         display_name: displayName.trim(),
         bio: bio.trim() || null,
         ...(newAvatarUrl ? { avatar_url: newAvatarUrl } : {}),
+        ...songUpdate,
       });
       navigation.goBack();
     } catch (err: any) {
@@ -245,20 +307,123 @@ const EditProfileScreen = () => {
             {/* ── Profile Song ── */}
             <View style={{ marginBottom: spacing['5'] }}>
               <Text style={labelStyle}>Profile Song</Text>
-              <View style={{
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: radii.md,
-                padding: spacing['4'],
-              }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Music size={16} color={colors.textDisabled} style={{ marginRight: spacing['2'] }} />
-                  <Text style={{ fontSize: fontSizes.sm, color: colors.textDisabled, flex: 1 }}>
-                    Profile song coming soon — MP3 upload not yet available.
-                  </Text>
-                </View>
-              </View>
+              {pickedSongName || currentSongUrl ? (() => {
+                const displayName = pickedSongName
+                  ? pickedSongName.replace(/\.[^.]+$/, '')
+                  : decodeURIComponent((currentSongUrl ?? '').split('/').pop() ?? '')
+                      .replace(/\.[^.]+$/, '')
+                      .replace(/[_-]+/g, ' ')
+                      .trim() || 'Profile Song';
+                return (
+                  <View style={{
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: radii.md,
+                    backgroundColor: colors.surface,
+                    overflow: 'hidden',
+                  }}>
+                    {/* Song identity row */}
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      padding: spacing['4'],
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.border,
+                    }}>
+                      <View style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 19,
+                        backgroundColor: colors.primary + '18',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: spacing['3'],
+                      }}>
+                        <Music size={18} color={colors.primary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.semibold, color: colors.textPrimary }}
+                          numberOfLines={1}
+                        >
+                          {displayName}
+                        </Text>
+                        <Text style={{ fontSize: fontSizes.xs, color: colors.textSecondary, marginTop: 2 }}>
+                          Profile song
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Action row */}
+                    <View style={{ flexDirection: 'row' }}>
+                      <TouchableOpacity
+                        onPress={handlePickSong}
+                        style={{
+                          flex: 1,
+                          paddingVertical: spacing['3'],
+                          alignItems: 'center',
+                          borderRightWidth: 1,
+                          borderRightColor: colors.border,
+                        }}
+                      >
+                        <Text style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.semibold, color: colors.primary }}>
+                          Change Song
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setSongUri(null);
+                          setPickedSongName(null);
+                          setCurrentSongUrl(null);
+                          setRemoveSong(true);
+                        }}
+                        style={{
+                          flex: 1,
+                          paddingVertical: spacing['3'],
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Text style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.medium, color: '#EF4444' }}>
+                          Remove
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })() : (
+                <TouchableOpacity
+                  onPress={handlePickSong}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: colors.primary,
+                    borderRadius: radii.md,
+                    backgroundColor: colors.surface,
+                    padding: spacing['4'],
+                  }}
+                >
+                  <View style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 19,
+                    backgroundColor: colors.primary + '18',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: spacing['3'],
+                  }}>
+                    <Music size={18} color={colors.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: fontSizes.sm, fontWeight: fontWeights.semibold, color: colors.primary }}>
+                      Add a profile song
+                    </Text>
+                    <Text style={{ fontSize: fontSizes.xs, color: colors.textSecondary, marginTop: 2 }}>
+                      Plays when others visit your profile
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
           </ScrollView>
         )}

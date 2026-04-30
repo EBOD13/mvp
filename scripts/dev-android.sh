@@ -38,6 +38,23 @@ windows_metro_running() {
 }
 
 detect_emulator() {
+  local preferred_name="${PIXEL_7_AVD_NAME:-Pixel_7}"
+
+  if [[ -n "$EMULATOR_SERIAL" ]]; then
+    echo "$EMULATOR_SERIAL"
+    return 0
+  fi
+
+  while read -r candidate; do
+    if [[ -z "$candidate" ]]; then
+      continue
+    fi
+    if "$ADB_EXE" -s "$candidate" emu avd name 2>/dev/null | tr -d '\r' | grep -qx "$preferred_name"; then
+      echo "$candidate"
+      return 0
+    fi
+  done < <("$ADB_EXE" devices | awk '$1 ~ /^emulator-/ && $2 == "device" { print $1 }')
+
   "$ADB_EXE" devices | awk '$1 ~ /^emulator-/ && $2 == "device" { print $1; exit }'
 }
 

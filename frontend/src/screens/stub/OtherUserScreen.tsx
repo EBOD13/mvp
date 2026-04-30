@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useIsFocused } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import {
   ArrowLeft,
@@ -30,6 +30,7 @@ import { PostResponse } from '../../types/feed';
 import { Avatar } from '../../components/common/Avatar';
 import PostCard from '../../components/cards/PostCard';
 import CommentSheet from '../../components/common/CommentSheet';
+import SongPlayer from '../../components/common/SongPlayer';
 
 type NavProp = StackNavigationProp<RootStackParamList>;
 type RoutePropType = RouteProp<RootStackParamList, 'OtherUserScreen'>;
@@ -91,6 +92,7 @@ const PassionChip: React.FC<{ item: PassionListItem; onPress: () => void }> = ({
 const OtherUserScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute<RoutePropType>();
+  const isFocused = useIsFocused();
   const { userId } = route.params;
   const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
 
@@ -521,6 +523,13 @@ const OtherUserScreen: React.FC = () => {
 
           {/* Action buttons */}
           {renderActionButtons()}
+
+          {/* Profile Song */}
+          {!!profile.profile_song_url && isFocused && (
+            <View style={{ marginTop: spacing['4'] }}>
+              <SongPlayer songUrl={profile.profile_song_url} />
+            </View>
+          )}
         </View>
 
         {/* ── Passions ── */}
