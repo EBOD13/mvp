@@ -34,5 +34,5 @@ __pycache__/
 node_modules/
 *.lock
 
-# settings.json
-/.claude/settings.json
+# Claude Code
+.claude/
