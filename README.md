@@ -190,7 +190,7 @@ supabase db push
 
 | Name | Role |
 |---|---|
-| Daniel Esambu | Project Manager/ Full Stack Developer |
+| Daniel Esambu | Project Manager / Full Stack Developer |
 | Marilou Bento | Techninal lead / Full Stack Developer |
 | Jennifer Marwitz | UI Designer / Full Stack Developer|
 | Mooketsi Noko | Backend Developer |
